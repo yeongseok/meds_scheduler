@@ -184,6 +184,10 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
 
   const scheduleData = selectedView === 'my-meds' ? myScheduleData : (careRecipientSchedules[selectedView] || myScheduleData);
 
+  // Always use Korean names for data keys
+  const daysKorean = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+  
+  // Display names based on language
   const days = language === 'ko' 
     ? ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
     : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -292,7 +296,7 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
   };
 
   const hasMissedDose = (dayIndex: number) => {
-    const dayName = days[dayIndex];
+    const dayName = daysKorean[dayIndex];
     const daySchedule = scheduleData[dayName];
     if (!daySchedule) return false;
     return daySchedule.some(medicine => medicine.status === 'missed');
@@ -426,36 +430,43 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
 
               {/* Scheduled Pills for Selected Date */}
               <div className="space-y-2">
-                {scheduleData[days[selectedDateIndex]].map((medicine, index) => (
-                  <div 
-                    key={`${medicine.id}-${medicine.time}-${index}`} 
-                    className={`flex items-center justify-between gap-3 p-3 rounded-lg bg-gradient-to-r ${getPeriodGradient(medicine.period)} border ${
-                      medicine.status === 'pending' 
-                        ? 'border-amber-300 ring-2 ring-amber-100' 
-                        : medicine.status === 'missed'
-                        ? 'border-orange-300'
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <div className={`w-10 h-10 ${getStatusColor(medicine.status)} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                        <Pill className="text-white" size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-800 text-[16px]">{medicine.name}</p>
-                        <div className="flex items-center space-x-2 text-xs text-gray-600 text-[14px] mt-1">
-                          {getPeriodIcon(medicine.period)}
-                          <span>{medicine.time}</span>
-                          <span>•</span>
-                          <span>{medicine.dosage}</span>
+                {scheduleData[daysKorean[selectedDateIndex]]?.length > 0 ? (
+                  scheduleData[daysKorean[selectedDateIndex]].map((medicine, index) => (
+                    <div 
+                      key={`${medicine.id}-${medicine.time}-${index}`} 
+                      className={`flex items-center justify-between gap-3 p-3 rounded-lg bg-gradient-to-r ${getPeriodGradient(medicine.period)} border ${
+                        medicine.status === 'pending' 
+                          ? 'border-amber-300 ring-2 ring-amber-100' 
+                          : medicine.status === 'missed'
+                          ? 'border-orange-300'
+                          : 'border-transparent'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <div className={`w-10 h-10 ${getStatusColor(medicine.status)} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                          <Pill className="text-white" size={18} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-800 text-[16px]">{medicine.name}</p>
+                          <div className="flex items-center space-x-2 text-xs text-gray-600 text-[14px] mt-1">
+                            {getPeriodIcon(medicine.period)}
+                            <span>{medicine.time}</span>
+                            <span>•</span>
+                            <span>{medicine.dosage}</span>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex-shrink-0">
+                        {getStatusBadge(medicine.status)}
+                      </div>
                     </div>
-                    <div className="flex-shrink-0">
-                      {getStatusBadge(medicine.status)}
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Pill className="mx-auto mb-2 text-gray-300" size={32} />
+                    <p className="text-[16px]">{language === 'ko' ? '예정된 약이 없습니다' : 'No medications scheduled'}</p>
                   </div>
-                ))}
+                )}
               </div>
             </TabsContent>
 
