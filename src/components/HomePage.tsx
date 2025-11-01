@@ -298,7 +298,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
         onNavigateToSettings={onNavigateToSettings}
       />
 
-      <div className="p-4 space-y-6 -mt-2">
+      <div className="p-4 space-y-6 m-[0px]">
         {/* Alert for Guardian View with Overdue */}
         {selectedView !== 'my-meds' && (currentPerson?.todayStatus.overdue || 0) > 0 && (
           <Card className="p-4 bg-orange-50 border-orange-200 border-2">
