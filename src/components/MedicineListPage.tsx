@@ -7,7 +7,6 @@ import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Avatar, AvatarFallback } from './ui/avatar';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,37 +18,61 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { toast } from 'sonner@2.0.3';
+import { useLanguage } from './LanguageContext';
+import { SharedHeader, CareRecipient } from './SharedHeader';
 
 interface MedicineListPageProps {
   onViewMedicine: (medicineId: string) => void;
+  onNavigateToSettings?: () => void;
+  selectedView?: string;
+  setSelectedView?: (view: string) => void;
 }
 
-export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
+export function MedicineListPage({ onViewMedicine, onNavigateToSettings, selectedView: propSelectedView, setSelectedView: propSetSelectedView }: MedicineListPageProps) {
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const [selectedView, setSelectedView] = useState('my-history');
+  const [localSelectedView, setLocalSelectedView] = useState('my-meds');
+  
+  // Use props if provided, otherwise use local state
+  const selectedView = propSelectedView ?? localSelectedView;
+  const setSelectedView = propSetSelectedView ?? setLocalSelectedView;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [medicineToDelete, setMedicineToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Mock data for care recipients
-  const careRecipients = [
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
     {
       id: 'person1',
-      name: '엄마 (Linda)',
+      name: 'Mom (Linda)',
       initials: 'LM',
       color: 'bg-orange-300',
-      relation: '어머니',
-      adherence: 88
+      relation: 'Mother',
+      adherence: 88,
+      todayStatus: {
+        total: 5,
+        taken: 3,
+        overdue: 0,
+        pending: 1,
+        upcoming: 1
+      }
     },
     {
       id: 'person2',
-      name: '아빠 (Robert)',
+      name: 'Dad (Robert)',
       initials: 'RM',
       color: 'bg-amber-400',
-      relation: '아버지',
-      adherence: 94
+      relation: 'Father',
+      adherence: 94,
+      todayStatus: {
+        total: 4,
+        taken: 3,
+        overdue: 0,
+        pending: 0,
+        upcoming: 1
+      }
     }
-  ];
+  ]);
 
   const currentPerson = careRecipients.find(p => p.id === selectedView);
 
@@ -57,11 +80,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
   const myMedicines = [
     {
       id: '1',
-      name: '비타민 D',
+      name: language === 'ko' ? '비타민 D' : 'Vitamin D',
       dosage: '1000 IU',
-      type: '정',
-      frequency: '1일 1회',
-      nextDose: '오전 08:00',
+      type: language === 'ko' ? '정' : 'tablet',
+      frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+      nextDose: language === 'ko' ? '오전 08:00' : '08:00 AM',
       status: 'active',
       color: 'from-amber-200 to-orange-300',
       bgColor: 'bg-amber-50',
@@ -72,11 +95,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     },
     {
       id: '2',
-      name: '혈압약',
+      name: language === 'ko' ? '혈압약' : 'Blood Pressure Med',
       dosage: '10mg',
-      type: '정',
-      frequency: '1일 2회',
-      nextDose: '오후 12:00',
+      type: language === 'ko' ? '정' : 'tablet',
+      frequency: language === 'ko' ? '1일 2회' : 'Twice daily',
+      nextDose: language === 'ko' ? '오후 12:00' : '12:00 PM',
       status: 'active',
       color: 'from-orange-300 to-red-400',
       bgColor: 'bg-orange-50',
@@ -87,11 +110,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     },
     {
       id: '3',
-      name: '칼슘 보충제',
+      name: language === 'ko' ? '칼슘 보충제' : 'Calcium Supplement',
       dosage: '500mg',
-      type: '정',
-      frequency: '1일 2회',
-      nextDose: '오후 06:00',
+      type: language === 'ko' ? '정' : 'tablet',
+      frequency: language === 'ko' ? '1일 2회' : 'Twice daily',
+      nextDose: language === 'ko' ? '오후 06:00' : '06:00 PM',
       status: 'active',
       color: 'from-stone-300 to-amber-300',
       bgColor: 'bg-stone-50',
@@ -102,11 +125,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     },
     {
       id: '4',
-      name: '수면제',
+      name: language === 'ko' ? '수면제' : 'Sleep Aid',
       dosage: '5mg',
-      type: '정',
-      frequency: '필요시',
-      nextDose: '필요시',
+      type: language === 'ko' ? '정' : 'tablet',
+      frequency: language === 'ko' ? '필요시' : 'As needed',
+      nextDose: language === 'ko' ? '필요시' : 'As needed',
       status: 'active',
       color: 'from-amber-300 to-orange-400',
       bgColor: 'bg-amber-50',
@@ -117,11 +140,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     },
     {
       id: '5',
-      name: '항생제',
+      name: language === 'ko' ? '항생제' : 'Antibiotic',
       dosage: '250mg',
-      type: '캡슐',
-      frequency: '1일 3회',
-      nextDose: '완료됨',
+      type: language === 'ko' ? '캡슐' : 'capsule',
+      frequency: language === 'ko' ? '1일 3회' : '3 times daily',
+      nextDose: language === 'ko' ? '완료됨' : 'Completed',
       status: 'completed',
       color: 'from-stone-200 to-stone-400',
       bgColor: 'bg-stone-50',
@@ -132,11 +155,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     },
     {
       id: '6',
-      name: '진통제',
+      name: language === 'ko' ? '진통제' : 'Pain Reliever',
       dosage: '400mg',
-      type: '정',
-      frequency: '필요시',
-      nextDose: '일시중지',
+      type: language === 'ko' ? '정' : 'tablet',
+      frequency: language === 'ko' ? '필요시' : 'As needed',
+      nextDose: language === 'ko' ? '일시중지' : 'Paused',
       status: 'paused',
       color: 'from-orange-200 to-amber-300',
       bgColor: 'bg-orange-50',
@@ -151,11 +174,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     person1: [
       {
         id: 'p1-1',
-        name: '혈압약',
+        name: language === 'ko' ? '혈압약' : 'Blood Pressure Med',
         dosage: '10mg',
-        type: '정',
-        frequency: '1일 2회',
-        nextDose: '오전 09:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 2회' : 'Twice daily',
+        nextDose: language === 'ko' ? '오전 09:00' : '09:00 AM',
         status: 'active',
         color: 'from-orange-300 to-red-400',
         bgColor: 'bg-orange-50',
@@ -166,11 +189,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       },
       {
         id: 'p1-2',
-        name: '비타민 D',
+        name: language === 'ko' ? '비타민 D' : 'Vitamin D',
         dosage: '2000 IU',
-        type: '정',
-        frequency: '1일 1회',
-        nextDose: '오전 08:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+        nextDose: language === 'ko' ? '오전 08:00' : '08:00 AM',
         status: 'active',
         color: 'from-amber-200 to-orange-300',
         bgColor: 'bg-amber-50',
@@ -181,11 +204,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       },
       {
         id: 'p1-3',
-        name: '관절염약',
+        name: language === 'ko' ? '관절염약' : 'Arthritis Med',
         dosage: '200mg',
-        type: '정',
-        frequency: '1일 1회',
-        nextDose: '오후 12:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+        nextDose: language === 'ko' ? '오후 12:00' : '12:00 PM',
         status: 'active',
         color: 'from-amber-300 to-orange-400',
         bgColor: 'bg-amber-50',
@@ -198,11 +221,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     person2: [
       {
         id: 'p2-1',
-        name: '당뇨약',
+        name: language === 'ko' ? '당뇨약' : 'Diabetes Med',
         dosage: '500mg',
-        type: '정',
-        frequency: '1일 2회',
-        nextDose: '오전 08:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 2회' : 'Twice daily',
+        nextDose: language === 'ko' ? '오전 08:00' : '08:00 AM',
         status: 'active',
         color: 'from-orange-200 to-amber-300',
         bgColor: 'bg-orange-50',
@@ -213,11 +236,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       },
       {
         id: 'p2-2',
-        name: '심장약',
+        name: language === 'ko' ? '심장약' : 'Heart Med',
         dosage: '25mg',
-        type: '정',
-        frequency: '1일 1회',
-        nextDose: '오전 09:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+        nextDose: language === 'ko' ? '오전 09:00' : '09:00 AM',
         status: 'active',
         color: 'from-orange-300 to-red-400',
         bgColor: 'bg-orange-50',
@@ -228,11 +251,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       },
       {
         id: 'p2-3',
-        name: '콜레스테롤약',
+        name: language === 'ko' ? '콜레스테롤약' : 'Cholesterol Med',
         dosage: '40mg',
-        type: '정',
-        frequency: '1일 1회',
-        nextDose: '오후 08:00',
+        type: language === 'ko' ? '정' : 'tablet',
+        frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+        nextDose: language === 'ko' ? '오후 08:00' : '08:00 PM',
         status: 'active',
         color: 'from-stone-300 to-amber-300',
         bgColor: 'bg-stone-50',
@@ -243,11 +266,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       },
       {
         id: 'p2-4',
-        name: '비타민 코스',
+        name: language === 'ko' ? '비타민 코스' : 'Vitamin Course',
         dosage: '100mg',
-        type: '캡슐',
-        frequency: '1일 1회',
-        nextDose: '완료됨',
+        type: language === 'ko' ? '캡슐' : 'capsule',
+        frequency: language === 'ko' ? '1일 1회' : 'Once daily',
+        nextDose: language === 'ko' ? '완료됨' : 'Completed',
         status: 'completed',
         color: 'from-stone-200 to-stone-400',
         bgColor: 'bg-stone-50',
@@ -271,28 +294,28 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
     switch (status) {
       case 'active':
         if (adherence >= 90) {
-          return <Badge className="bg-amber-100 text-amber-700 border-amber-200">🟢 훌륭함</Badge>;
+          return <Badge className="bg-amber-100 text-amber-700 border-amber-200">🟢 {language === 'ko' ? '훌륭함' : 'Excellent'}</Badge>;
         } else if (adherence >= 80) {
-          return <Badge className="bg-orange-100 text-orange-700 border-orange-200">🟡 좋음</Badge>;
+          return <Badge className="bg-orange-100 text-orange-700 border-orange-200">🟡 {language === 'ko' ? '좋음' : 'Good'}</Badge>;
         } else {
-          return <Badge className="bg-red-100 text-red-700 border-red-200">🟠 주의 필요</Badge>;
+          return <Badge className="bg-red-100 text-red-700 border-red-200">🟠 {language === 'ko' ? '주의 필요' : 'Needs Attention'}</Badge>;
         }
       case 'completed':
-        return <Badge className="bg-stone-100 text-stone-700 border-stone-200">✅ 완료됨</Badge>;
+        return <Badge className="bg-stone-100 text-stone-700 border-stone-200">✅ {language === 'ko' ? '완료됨' : 'Completed'}</Badge>;
       case 'paused':
-        return <Badge className="bg-stone-100 text-stone-700 border-stone-200">⏸️ 일시중지</Badge>;
+        return <Badge className="bg-stone-100 text-stone-700 border-stone-200">⏸️ {language === 'ko' ? '일시중지' : 'Paused'}</Badge>;
       default:
-        return <Badge variant="outline">알 수 없음</Badge>;
+        return <Badge variant="outline">{language === 'ko' ? '알 수 없음' : 'Unknown'}</Badge>;
     }
   };
 
   const getStreakBadge = (streak: number) => {
     if (streak >= 10) {
-      return <Badge className="bg-orange-100 text-orange-700 border-orange-200">🔥 {streak}일</Badge>;
+      return <Badge className="bg-orange-100 text-orange-700 border-orange-200">🔥 {streak}{language === 'ko' ? '일' : ' days'}</Badge>;
     } else if (streak >= 5) {
-      return <Badge className="bg-amber-100 text-amber-700 border-amber-200">⭐ {streak}일</Badge>;
+      return <Badge className="bg-amber-100 text-amber-700 border-amber-200">⭐ {streak}{language === 'ko' ? '일' : ' days'}</Badge>;
     } else if (streak > 0) {
-      return <Badge className="bg-amber-50 text-amber-600 border-amber-200">✨ {streak}일</Badge>;
+      return <Badge className="bg-amber-50 text-amber-600 border-amber-200">✨ {streak}{language === 'ko' ? '일' : ' days'}</Badge>;
     }
     return null;
   };
@@ -303,125 +326,21 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-orange-50 to-amber-50">
-      {/* Header with Gradient */}
-      <div className="gradient-success p-6 text-white relative overflow-hidden flex-shrink-0">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-
-              <p className="text-green-100 text-[20px] not-italic font-normal font-bold">
-                {selectedView === 'my-history' ? '복약 여정을 추적하세요' : `${currentPerson?.name.split(' ')[0]}님의 여정 추적`}
-              </p>
-            </div>
-          </div>
-          
-          {/* Overall Stats */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-medium text-[20px]">
-                {selectedView === 'my-history' ? '전체 순응도' : `${currentPerson?.name.split(' ')[0]}님의 순응도`}
-              </h3>
-              <TrendingUp className="text-green-200" size={20} />
-            </div>
-            <div className="flex items-center space-x-3">
-              <Progress value={overallAdherence} className="flex-1 h-3" />
-              <span className="text-white font-bold text-[18px]">{overallAdherence}%</span>
-            </div>
-            <p className="text-green-100 text-sm mt-1 text-[18px]">
-              {selectedView === 'my-history' ? '잘하고 계세요! 💪' : 
-                overallAdherence >= 90 ? '🎉 훌륭한 순응도입니다!' : 
-                overallAdherence >= 80 ? '👍 좋은 진전입니다' : '⚠️ 주의가 필요합니다'}
-            </p>
-          </div>
-        </div>
-      </div>
+      <SharedHeader
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        careRecipients={careRecipients}
+        setCareRecipients={setCareRecipients}
+        onNavigateToSettings={onNavigateToSettings}
+      />
 
       <div className="flex-1 overflow-y-auto p-4">
-        {/* View Switcher */}
-        {careRecipients.length > 0 && (
-          <Card className="bg-white/95 backdrop-blur-sm p-3 border-0 shadow-md mb-1">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-300 to-amber-400 rounded-full flex items-center justify-center flex-shrink-0">
-                {selectedView === 'my-history' ? (
-                  <Heart className="text-white" size={18} />
-                ) : (
-                  <Users className="text-white" size={18} />
-                )}
-              </div>
-              <Select value={selectedView} onValueChange={setSelectedView}>
-                <SelectTrigger className="flex-1 border-0 bg-gray-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="my-history">
-                    <div className="flex items-center space-x-2">
-                      <Heart size={16} className="text-amber-500" />
-                      <span className="font-medium text-base text-[16px]">나의 기록</span>
-                    </div>
-                  </SelectItem>
-                  {careRecipients.map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className={`${person.color} text-white text-xs`}>
-                            {person.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-base text-[16px]">{person.name}</span>
-                        <span className="text-sm text-gray-500 text-[14px]">• {person.relation}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedView !== 'my-history' && (
-              <div className="pt-2 border-t border-gray-200">
-                <p className="text-xs text-gray-600 flex items-center text-[14px]">
-                  <Users size={12} className="mr-1" />
-                  보호자로 보기
-                </p>
-              </div>
-            )}
-          </Card>
-        )}
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          <Card className="medicine-card p-3 text-center border-0 aspect-square flex flex-col justify-center">
-            <div className="w-11 h-11 bg-gradient-to-br from-orange-300 to-amber-400 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <Pill className="text-white" size={20} />
-            </div>
-            <p className="text-gray-800 text-[22px] mb-0.5 font-bold">{medicines.filter(m => m.status === 'active').length}</p>
-            <p className="text-gray-700 text-[18px]">복용 중</p>
-          </Card>
-          <Card className="medicine-card p-3 text-center border-0 aspect-square flex flex-col justify-center">
-            <div className="w-11 h-11 bg-gradient-to-br from-amber-300 to-orange-400 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <Award className="text-white" size={20} />
-            </div>
-            <p className="text-gray-800 text-[22px] mb-0.5 font-bold">
-              {Math.max(...medicines.map(m => m.streak))}
-            </p>
-            <p className="text-gray-700 text-[18px]">최고 연속</p>
-          </Card>
-          <Card className="medicine-card p-3 text-center border-0 aspect-square flex flex-col justify-center">
-            <div className="w-11 h-11 bg-gradient-to-br from-stone-400 to-amber-400 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-              <Target className="text-white" size={20} />
-            </div>
-            <p className="text-gray-800 text-[22px] mb-0.5 font-bold">{overallAdherence}%</p>
-            <p className="text-gray-700 text-[18px]">순응도</p>
-          </Card>
-        </div>
-
         {/* Search and Filter */}
         <div className="flex space-x-3 mb-4">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
-              placeholder="약 검색..."
+              placeholder={language === 'ko' ? '약 검색...' : 'Search medications...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 border-gray-200 focus:border-orange-400 focus:ring-orange-400/20 bg-white"
@@ -435,16 +354,16 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSelectedFilter('all')} className="text-[16px]">
-                모든 약
+                {language === 'ko' ? '모든 약' : 'All Medications'}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSelectedFilter('active')} className="text-[16px]">
-                복용 중만
+                {language === 'ko' ? '복용 중만' : 'Active Only'}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSelectedFilter('completed')} className="text-[16px]">
-                완료됨
+                {language === 'ko' ? '완료됨' : 'Completed'}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSelectedFilter('paused')} className="text-[16px]">
-                일시중지
+                {language === 'ko' ? '일시중지' : 'Paused'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -458,7 +377,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
             onClick={() => setSelectedFilter('all')}
             className={selectedFilter === 'all' ? 'bg-gradient-to-r from-orange-400 to-amber-500 text-[16px]' : 'bg-white border-gray-200 text-[16px]'}
           >
-            전체 ({medicines.length})
+            {language === 'ko' ? '전체' : 'All'} ({medicines.length})
           </Button>
           <Button
             variant={selectedFilter === 'active' ? 'default' : 'outline'}
@@ -466,7 +385,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
             onClick={() => setSelectedFilter('active')}
             className={selectedFilter === 'active' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-[16px]' : 'bg-white border-gray-200 text-[16px]'}
           >
-            복용 중 ({medicines.filter(m => m.status === 'active').length})
+            {language === 'ko' ? '복용 중' : 'Active'} ({medicines.filter(m => m.status === 'active').length})
           </Button>
           <Button
             variant={selectedFilter === 'completed' ? 'default' : 'outline'}
@@ -474,7 +393,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
             onClick={() => setSelectedFilter('completed')}
             className={selectedFilter === 'completed' ? 'bg-gradient-to-r from-stone-400 to-amber-400 text-[16px]' : 'bg-white border-gray-200 text-[16px]'}
           >
-            완료됨 ({medicines.filter(m => m.status === 'completed').length})
+            {language === 'ko' ? '완료됨' : 'Completed'} ({medicines.filter(m => m.status === 'completed').length})
           </Button>
         </div>
 
@@ -484,9 +403,11 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
             <div className="w-24 h-24 bg-gradient-to-r from-stone-200 to-stone-300 rounded-3xl flex items-center justify-center mx-auto mb-4">
               <Pill size={32} className="text-gray-500" />
             </div>
-            <h3 className="text-gray-700 mb-2 text-[20px]">약을 찾을 수 없습니다</h3>
+            <h3 className="text-gray-700 mb-2 text-[20px]">{language === 'ko' ? '약을 찾을 수 없습니다' : 'No medications found'}</h3>
             <p className="text-gray-500 text-sm text-[16px]">
-              {searchQuery ? '검색어를 조정해 보세요' : '첫 번째 약을 추가하여 시작하세요'}
+              {searchQuery 
+                ? (language === 'ko' ? '검색어를 조정해 보세요' : 'Try adjusting your search')
+                : (language === 'ko' ? '첫 번째 약을 추가하여 시작하세요' : 'Add your first medication to get started')}
             </p>
           </div>
         ) : (
@@ -515,7 +436,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
                       {/* Progress */}
                       <div className="mb-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-gray-500 text-[14px]">진행도</span>
+                          <span className="text-xs text-gray-500 text-[14px]">{language === 'ko' ? '진행도' : 'Progress'}</span>
                           <span className="text-xs font-medium text-gray-700 text-[14px]">
                             {medicine.takenDoses}/{medicine.totalDoses}
                           </span>
@@ -531,7 +452,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
                         </div>
                         <div className="flex items-center space-x-1 whitespace-nowrap">
                           <Clock size={12} className="text-gray-400 flex-shrink-0" />
-                          <span className="text-xs text-gray-600 text-[14px]">다음: {medicine.nextDose}</span>
+                          <span className="text-xs text-gray-600 text-[14px]">{language === 'ko' ? '다음' : 'Next'}: {medicine.nextDose}</span>
                         </div>
                       </div>
                       
@@ -551,7 +472,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
                       onClick={() => onViewMedicine(medicine.id)}
                       className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 text-[16px]"
                     >
-                      보기
+                      {language === 'ko' ? '보기' : 'View'}
                     </Button>
                     {selectedView === 'my-history' && (
                       <DropdownMenu>
@@ -568,7 +489,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
                               setDeleteDialogOpen(true);
                             }}
                           >
-                            삭제
+                            {language === 'ko' ? '삭제' : 'Delete'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -581,7 +502,7 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Target size={14} className="text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700 text-[16px]">순응도</span>
+                      <span className="text-sm font-medium text-gray-700 text-[16px]">{language === 'ko' ? '순응도' : 'Adherence'}</span>
                     </div>
                     <span className="text-sm font-bold text-gray-800 text-[16px]">{medicine.adherence}%</span>
                   </div>
@@ -600,26 +521,37 @@ export function MedicineListPage({ onViewMedicine }: MedicineListPageProps) {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="max-w-[90%] rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[20px]">약 삭제</AlertDialogTitle>
+            <AlertDialogTitle className="text-[20px]">
+              {language === 'ko' ? '약 삭제' : 'Delete Medication'}
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-[16px]">
-              정말로 "{medicineToDelete?.name}"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.
+              {language === 'ko' 
+                ? `정말로 "${medicineToDelete?.name}"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.`
+                : `Are you sure you want to delete "${medicineToDelete?.name}"? This action cannot be undone.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row gap-2 sm:gap-2">
-            <AlertDialogCancel className="flex-1 text-[16px] m-0">취소</AlertDialogCancel>
+            <AlertDialogCancel className="flex-1 text-[16px] m-0">
+              {language === 'ko' ? '취소' : 'Cancel'}
+            </AlertDialogCancel>
             <AlertDialogAction 
               className="flex-1 bg-destructive hover:bg-destructive/90 text-[16px] m-0"
               onClick={() => {
                 if (medicineToDelete) {
-                  toast.success('약이 삭제되었습니다', {
-                    description: `${medicineToDelete.name}이(가) 목록에서 제거되었습니다.`,
-                    duration: 3000,
-                  });
+                  toast.success(
+                    language === 'ko' ? '약이 삭제되었습니다' : 'Medication deleted',
+                    {
+                      description: language === 'ko' 
+                        ? `${medicineToDelete.name}이(가) 목록에서 제거되었습니다.`
+                        : `${medicineToDelete.name} has been removed from your list.`,
+                      duration: 3000,
+                    }
+                  );
                   setMedicineToDelete(null);
                 }
               }}
             >
-              삭제
+              {language === 'ko' ? '삭제' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

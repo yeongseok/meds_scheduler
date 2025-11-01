@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Checkbox } from './ui/checkbox';
 import { toast } from 'sonner@2.0.3';
 import { TimePicker } from './TimePicker';
+import { useLanguage } from './LanguageContext';
 
 interface EditMedicinePageProps {
   medicineId?: string;
@@ -26,6 +27,7 @@ export function EditMedicinePage({
   onBack,
   onSave 
 }: EditMedicinePageProps) {
+  const { language } = useLanguage();
   const [formData, setFormData] = useState({
     name: medicineName,
     dosage: '1000 IU',
@@ -38,7 +40,11 @@ export function EditMedicinePage({
   });
   const [doseTimes, setDoseTimes] = useState<string[]>(['08:00']);
   const [asNeeded, setAsNeeded] = useState(false);
-  const [selectedDays, setSelectedDays] = useState<string[]>(['일', '월', '화', '수', '목', '금', '토']);
+  const [selectedDays, setSelectedDays] = useState<string[]>(
+    language === 'ko' 
+      ? ['일', '월', '화', '수', '목', '금', '토']
+      : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
@@ -50,7 +56,7 @@ export function EditMedicinePage({
   const [sideEffects, setSideEffects] = useState('May cause dizziness, dry cough');
   const [medicalNotes, setMedicalNotes] = useState('Monitor blood pressure weekly');
 
-  const daysOfWeek = [
+  const daysOfWeek = language === 'ko' ? [
     { id: '일', label: '일', fullLabel: '일요일' },
     { id: '월', label: '월', fullLabel: '월요일' },
     { id: '화', label: '화', fullLabel: '화요일' },
@@ -58,31 +64,41 @@ export function EditMedicinePage({
     { id: '목', label: '목', fullLabel: '목요일' },
     { id: '금', label: '금', fullLabel: '금요일' },
     { id: '토', label: '토', fullLabel: '토요일' }
+  ] : [
+    { id: 'Sun', label: 'Sun', fullLabel: 'Sunday' },
+    { id: 'Mon', label: 'Mon', fullLabel: 'Monday' },
+    { id: 'Tue', label: 'Tue', fullLabel: 'Tuesday' },
+    { id: 'Wed', label: 'Wed', fullLabel: 'Wednesday' },
+    { id: 'Thu', label: 'Thu', fullLabel: 'Thursday' },
+    { id: 'Fri', label: 'Fri', fullLabel: 'Friday' },
+    { id: 'Sat', label: 'Sat', fullLabel: 'Saturday' }
   ];
 
   const medicineTypes = [
-    { value: 'tablet', label: '정제', icon: Pill, color: 'from-amber-400 to-orange-600', bgColor: 'bg-amber-50' },
-    { value: 'capsule', label: '캡슐', icon: Pill, color: 'from-orange-400 to-amber-600', bgColor: 'bg-orange-50' },
-    { value: 'liquid', label: '액상', icon: Droplets, color: 'from-amber-300 to-orange-500', bgColor: 'bg-amber-50' },
-    { value: 'injection', label: '주사', icon: Syringe, color: 'from-orange-400 to-red-600', bgColor: 'bg-orange-50' },
-    { value: 'drops', label: '점안액', icon: Droplets, color: 'from-stone-400 to-amber-600', bgColor: 'bg-stone-50' },
-    { value: 'inhaler', label: '흡입기', icon: Pill, color: 'from-orange-400 to-orange-600', bgColor: 'bg-orange-50' },
-    { value: 'cream', label: '크림', icon: Sparkles, color: 'from-orange-300 to-amber-500', bgColor: 'bg-orange-50' }
+    { value: 'tablet', label: language === 'ko' ? '정제' : 'Tablet', icon: Pill, color: 'from-amber-400 to-orange-600', bgColor: 'bg-amber-50' },
+    { value: 'capsule', label: language === 'ko' ? '캡슐' : 'Capsule', icon: Pill, color: 'from-orange-400 to-amber-600', bgColor: 'bg-orange-50' },
+    { value: 'liquid', label: language === 'ko' ? '액상' : 'Liquid', icon: Droplets, color: 'from-amber-300 to-orange-500', bgColor: 'bg-amber-50' },
+    { value: 'injection', label: language === 'ko' ? '주사' : 'Injection', icon: Syringe, color: 'from-orange-400 to-red-600', bgColor: 'bg-orange-50' },
+    { value: 'drops', label: language === 'ko' ? '점안액' : 'Drops', icon: Droplets, color: 'from-stone-400 to-amber-600', bgColor: 'bg-stone-50' },
+    { value: 'inhaler', label: language === 'ko' ? '흡입기' : 'Inhaler', icon: Pill, color: 'from-orange-400 to-orange-600', bgColor: 'bg-orange-50' },
+    { value: 'cream', label: language === 'ko' ? '크림' : 'Cream', icon: Sparkles, color: 'from-orange-300 to-amber-500', bgColor: 'bg-orange-50' }
   ];
 
   const handleSave = () => {
     // Validation
     if (!formData.name.trim()) {
-      toast.error('약 이름을 입력해주세요');
+      toast.error(language === 'ko' ? '약 이름을 입력해주세요' : 'Please enter medicine name');
       return;
     }
     if (!formData.dosage.trim()) {
-      toast.error('용량을 입력해주세요');
+      toast.error(language === 'ko' ? '용량을 입력해주세요' : 'Please enter dosage');
       return;
     }
 
     // Show success message
-    toast.success(`${formData.name} 약이 업데이트되었습니다! 💊`);
+    toast.success(language === 'ko' 
+      ? `${formData.name} 약이 업데이트되었습니다! 💊`
+      : `${formData.name} has been updated! 💊`);
 
     if (onSave) {
       onSave({
@@ -134,13 +150,15 @@ export function EditMedicinePage({
             <Button variant="ghost" size="icon" onClick={onBack} className="text-white hover:bg-white/20">
               <ArrowLeft size={20} />
             </Button>
-            <h1 className="ml-2 text-xl font-bold text-[18px]">약 편집 💊</h1>
+            <h1 className="ml-2 text-xl font-bold text-[18px]">
+              {language === 'ko' ? '약 편집 💊' : 'Edit Medicine 💊'}
+            </h1>
           </div>
           <Button 
             onClick={handleSave}
             className="bg-white/20 hover:bg-white/30 text-white border-0 text-[16px]"
           >
-            저장
+            {language === 'ko' ? '저장' : 'Save'}
           </Button>
         </div>
       </div>
@@ -151,14 +169,20 @@ export function EditMedicinePage({
         <Card className="medicine-card p-4 border-0">
           <Label className="block mb-3 flex items-center space-x-2">
             <Camera className="text-amber-600" size={18} />
-            <span className="text-[20px] font-bold">약 사진 (선택사항)</span>
+            <span className="text-[20px] font-bold">
+              {language === 'ko' ? '약 사진 (선택사항)' : 'Medicine Photo (Optional)'}
+            </span>
           </Label>
           <div className="border-2 border-dashed border-amber-200 rounded-2xl p-6 text-center bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer">
             <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
               <Camera size={24} className="text-white" />
             </div>
-            <p className="text-gray-600 font-medium">탭하여 사진 추가</p>
-            <p className="text-sm text-gray-500 mt-1">약을 쉽게 식별할 수 있습니다</p>
+            <p className="text-gray-600 font-medium">
+              {language === 'ko' ? '탭하여 사진 추가' : 'Tap to add photo'}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {language === 'ko' ? '약을 쉽게 식별할 수 있습니다' : 'Helps identify your medicine easily'}
+            </p>
           </div>
         </Card>
 
@@ -166,14 +190,18 @@ export function EditMedicinePage({
         <Card className="medicine-card p-4 space-y-4 border-0">
           <h3 className="flex items-center space-x-2 text-gray-800">
             <Pill className="text-amber-600" size={20} />
-            <span className="text-[20px] font-bold">기본 정보</span>
+            <span className="text-[20px] font-bold">
+              {language === 'ko' ? '기본 정보' : 'Basic Information'}
+            </span>
           </h3>
           
           <div className="space-y-3">
-            <Label htmlFor="medicine-name" className="text-gray-700 text-[16px]">약 이름 *</Label>
+            <Label htmlFor="medicine-name" className="text-gray-700 text-[16px]">
+              {language === 'ko' ? '약 이름 *' : 'Medicine Name *'}
+            </Label>
             <Input
               id="medicine-name"
-              placeholder="약 이름 입력"
+              placeholder={language === 'ko' ? '약 이름 입력' : 'Enter medicine name'}
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white text-[16px]"
@@ -182,20 +210,24 @@ export function EditMedicinePage({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
-              <Label htmlFor="dosage" className="text-gray-700 text-[16px]">용량 *</Label>
+              <Label htmlFor="dosage" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '용량 *' : 'Dosage *'}
+              </Label>
               <Input
                 id="dosage"
-                placeholder="예: 500mg"
+                placeholder={language === 'ko' ? '예: 500mg' : 'e.g., 500mg'}
                 value={formData.dosage}
                 onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
                 className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white text-[16px]"
               />
             </div>
             <div className="space-y-3">
-              <Label htmlFor="medicine-type" className="text-gray-700 text-[16px]">유형</Label>
+              <Label htmlFor="medicine-type" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '유형' : 'Type'}
+              </Label>
               <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
                 <SelectTrigger className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white">
-                  <SelectValue placeholder="유형 선택" />
+                  <SelectValue placeholder={language === 'ko' ? '유형 선택' : 'Select type'} />
                 </SelectTrigger>
                 <SelectContent>
                   {medicineTypes.map((type) => {
@@ -217,18 +249,32 @@ export function EditMedicinePage({
           </div>
 
           <div className="space-y-3">
-            <Label htmlFor="taking-time" className="text-gray-700 text-[16px]">복용 시기</Label>
+            <Label htmlFor="taking-time" className="text-gray-700 text-[16px]">
+              {language === 'ko' ? '복용 시기' : 'Taking Time'}
+            </Label>
             <Select value={formData.timing} onValueChange={(value) => setFormData({ ...formData, timing: value })}>
               <SelectTrigger className="border-gray-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white">
-                <SelectValue placeholder="복용 시기 선택" />
+                <SelectValue placeholder={language === 'ko' ? '복용 시기 선택' : 'Select timing'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="before-meals"><span className="text-[16px]">🍽️ 식전</span></SelectItem>
-                <SelectItem value="after-meals"><span className="text-[16px]">🍽️ 식후</span></SelectItem>
-                <SelectItem value="with-meals"><span className="text-[16px]">🍽️ 식사와 함께</span></SelectItem>
-                <SelectItem value="empty-stomach"><span className="text-[16px]">⭕ 공복</span></SelectItem>
-                <SelectItem value="bedtime"><span className="text-[16px]">🛏️ 취침 시</span></SelectItem>
-                <SelectItem value="anytime"><span className="text-[16px]">⏰ 언제든지</span></SelectItem>
+                <SelectItem value="before-meals">
+                  <span className="text-[16px]">{language === 'ko' ? '🍽️ 식전' : '🍽️ Before meals'}</span>
+                </SelectItem>
+                <SelectItem value="after-meals">
+                  <span className="text-[16px]">{language === 'ko' ? '🍽️ 식후' : '🍽️ After meals'}</span>
+                </SelectItem>
+                <SelectItem value="with-meals">
+                  <span className="text-[16px]">{language === 'ko' ? '🍽️ 식사와 함께' : '🍽️ With meals'}</span>
+                </SelectItem>
+                <SelectItem value="empty-stomach">
+                  <span className="text-[16px]">{language === 'ko' ? '⭕ 공복' : '⭕ Empty stomach'}</span>
+                </SelectItem>
+                <SelectItem value="bedtime">
+                  <span className="text-[16px]">{language === 'ko' ? '🛏️ 취침 시' : '🛏️ Bedtime'}</span>
+                </SelectItem>
+                <SelectItem value="anytime">
+                  <span className="text-[16px]">{language === 'ko' ? '⏰ 언제든지' : '⏰ Anytime'}</span>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -238,12 +284,16 @@ export function EditMedicinePage({
         <Card className="medicine-card p-4 space-y-4 border-0">
           <h3 className="flex items-center space-x-2 text-gray-800">
             <Clock className="text-amber-600" size={20} />
-            <span className="text-[20px] font-bold">일정</span>
+            <span className="text-[20px] font-bold">
+              {language === 'ko' ? '일정' : 'Schedule'}
+            </span>
           </h3>
           
           {/* Date Range Selection */}
           <div className="space-y-3">
-            <Label className="text-gray-700 text-[16px]">복용 기간</Label>
+            <Label className="text-gray-700 text-[16px]">
+              {language === 'ko' ? '복용 기간' : 'Duration'}
+            </Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -260,7 +310,9 @@ export function EditMedicinePage({
                       dateRange.from.toLocaleDateString()
                     )
                   ) : (
-                    <span className="text-gray-400">시작 및 종료 날짜 선택</span>
+                    <span className="text-gray-400">
+                      {language === 'ko' ? '시작 및 종료 날짜 선택' : 'Select start and end date'}
+                    </span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -278,7 +330,9 @@ export function EditMedicinePage({
             {dateRange?.from && dateRange?.to && (
               <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
                 <p className="text-sm text-gray-700">
-                  📅 기간: {Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))}일
+                  📅 {language === 'ko' ? '기간: ' : 'Duration: '}
+                  {Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24))}
+                  {language === 'ko' ? '일' : ' days'}
                 </p>
               </div>
             )}
@@ -286,7 +340,9 @@ export function EditMedicinePage({
 
           {/* Days of Dose */}
           <div className="space-y-3">
-            <Label className="text-gray-700 text-[16px]">복용 요일</Label>
+            <Label className="text-gray-700 text-[16px]">
+              {language === 'ko' ? '복용 요일' : 'Days of Week'}
+            </Label>
             
             {/* Select All Days */}
             <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
@@ -300,7 +356,7 @@ export function EditMedicinePage({
                 htmlFor="select-all-days" 
                 className="text-gray-700 cursor-pointer flex-1 text-[16px]"
               >
-                매일
+                {language === 'ko' ? '매일' : 'Every day'}
               </Label>
               {allDaysSelected && (
                 <Check size={16} className="text-amber-600" />
@@ -331,8 +387,10 @@ export function EditMedicinePage({
               <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
                 <p className="text-sm text-gray-700 text-[16px]">
                   📆 {selectedDays.length === daysOfWeek.length 
-                    ? '매일 복용' 
-                    : `주 ${selectedDays.length}일: ${selectedDays.join(', ')}`}
+                    ? (language === 'ko' ? '매일 복용' : 'Every day')
+                    : (language === 'ko' 
+                        ? `주 ${selectedDays.length}일: ${selectedDays.join(', ')}`
+                        : `${selectedDays.length} days/week: ${selectedDays.join(', ')}`)}
                 </p>
               </div>
             )}
@@ -341,7 +399,9 @@ export function EditMedicinePage({
           {/* Dose Times */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label className="text-gray-700 text-[16px]">복용 시간</Label>
+              <Label className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '복용 시간' : 'Dose Times'}
+              </Label>
               {!asNeeded && (
                 <Button
                   type="button"
@@ -349,7 +409,7 @@ export function EditMedicinePage({
                   className="h-8 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-[14px]"
                 >
                   <Plus size={16} className="mr-1" />
-                  시간 추가
+                  {language === 'ko' ? '시간 추가' : 'Add time'}
                 </Button>
               )}
             </div>
@@ -364,10 +424,12 @@ export function EditMedicinePage({
               />
               <div className="flex-1">
                 <Label htmlFor="as-needed" className="text-gray-800 font-medium cursor-pointer text-[16px]">
-                  필요시 복용 (PRN)
+                  {language === 'ko' ? '필요시 복용 (PRN)' : 'As needed (PRN)'}
                 </Label>
                 <p className="text-xs text-gray-600 mt-0.5 text-[14px]">
-                  정기 일정이 아닌, 필요할 때만 복용
+                  {language === 'ko' 
+                    ? '정기 일정이 아닌, 필요할 때만 복용'
+                    : 'Take only when needed, not on a schedule'}
                 </p>
               </div>
             </div>
@@ -404,7 +466,9 @@ export function EditMedicinePage({
                 {doseTimes.length > 0 && (
                   <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
                     <p className="text-sm text-gray-700 text-[16px]">
-                      🔔 하루 {doseTimes.length}회 복용
+                      🔔 {language === 'ko' 
+                        ? `하루 ${doseTimes.length}회 복용`
+                        : `${doseTimes.length} time${doseTimes.length > 1 ? 's' : ''} per day`}
                     </p>
                   </div>
                 )}
@@ -417,12 +481,16 @@ export function EditMedicinePage({
         <Card className="medicine-card p-4 space-y-4 border-0">
           <h3 className="flex items-center space-x-2 text-gray-800">
             <FileText className="text-amber-600" size={20} />
-            <span className="text-[20px] font-bold">의료 정보</span>
+            <span className="text-[20px] font-bold">
+              {language === 'ko' ? '의료 정보' : 'Medical Information'}
+            </span>
           </h3>
           
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="prescribed-by" className="text-gray-700 text-[16px]">처방의</Label>
+              <Label htmlFor="prescribed-by" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '처방의' : 'Prescribed By'}
+              </Label>
               <Input
                 id="prescribed-by"
                 placeholder="Dr. Sarah Johnson"
@@ -433,7 +501,9 @@ export function EditMedicinePage({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pharmacy" className="text-gray-700 text-[16px]">약국</Label>
+              <Label htmlFor="pharmacy" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '약국' : 'Pharmacy'}
+              </Label>
               <Input
                 id="pharmacy"
                 placeholder="MediCare Pharmacy"
@@ -444,10 +514,12 @@ export function EditMedicinePage({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="instructions" className="text-gray-700 text-[16px]">복용 지시</Label>
+              <Label htmlFor="instructions" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '복용 지시' : 'Instructions'}
+              </Label>
               <Textarea
                 id="instructions"
-                placeholder="음식과 함께 복용. 알코올 피하기."
+                placeholder={language === 'ko' ? '음식과 함께 복용. 알코올 피하기.' : 'Take with food. Avoid alcohol.'}
                 value={instructions}
                 onChange={(e) => setInstructions(e.target.value)}
                 rows={2}
@@ -456,10 +528,12 @@ export function EditMedicinePage({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="side-effects" className="text-gray-700 text-[16px]">부작용</Label>
+              <Label htmlFor="side-effects" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '부작용' : 'Side Effects'}
+              </Label>
               <Textarea
                 id="side-effects"
-                placeholder="현기증, 마른 기침 유발 가능"
+                placeholder={language === 'ko' ? '현기증, 마른 기침 유발 가능' : 'May cause dizziness, dry cough'}
                 value={sideEffects}
                 onChange={(e) => setSideEffects(e.target.value)}
                 rows={2}
@@ -468,10 +542,12 @@ export function EditMedicinePage({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="medical-notes" className="text-gray-700 text-[16px]">메모</Label>
+              <Label htmlFor="medical-notes" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '메모' : 'Notes'}
+              </Label>
               <Textarea
                 id="medical-notes"
-                placeholder="주간 혈압 모니터링"
+                placeholder={language === 'ko' ? '주간 혈압 모니터링' : 'Monitor blood pressure weekly'}
                 value={medicalNotes}
                 onChange={(e) => setMedicalNotes(e.target.value)}
                 rows={2}
@@ -490,7 +566,7 @@ export function EditMedicinePage({
               className="w-full h-12 text-amber-700 hover:text-amber-800 hover:bg-amber-100 font-medium flex items-center justify-center gap-2 text-[18px]"
             >
               <Pause size={18} />
-              일시중지
+              {language === 'ko' ? '일시중지' : 'Pause'}
             </Button>
           </Card>
           
@@ -501,7 +577,7 @@ export function EditMedicinePage({
               className="w-full h-12 text-red-600 hover:text-red-700 hover:bg-red-100 font-medium flex items-center justify-center gap-2 text-[18px]"
             >
               <Trash2 size={18} />
-              삭제
+              {language === 'ko' ? '삭제' : 'Delete'}
             </Button>
           </Card>
         </div>
@@ -518,9 +594,13 @@ export function EditMedicinePage({
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="text-red-600" size={32} />
               </div>
-              <h3 className="font-bold text-gray-800 text-center mb-2 text-[18px]">약을 삭제하시겠습니까?</h3>
+              <h3 className="font-bold text-gray-800 text-center mb-2 text-[18px]">
+                {language === 'ko' ? '약을 삭제하시겠습니까?' : 'Delete Medicine?'}
+              </h3>
               <p className="text-sm text-gray-600 text-center text-[16px]">
-                "{formData.name}"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없으며 관련된 모든 알림이 제거됩니다.
+                {language === 'ko' 
+                  ? `"${formData.name}"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없으며 관련된 모든 알림이 제거됩니다.`
+                  : `Are you sure you want to delete "${formData.name}"? This action cannot be undone and all associated reminders will be removed.`}
               </p>
             </div>
             <div className="flex gap-3">
@@ -529,13 +609,13 @@ export function EditMedicinePage({
                 onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 h-11 border-gray-300 text-[16px]"
               >
-                취소
+                {language === 'ko' ? '취소' : 'Cancel'}
               </Button>
               <Button
                 onClick={handleDelete}
                 className="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white text-[16px]"
               >
-                삭제
+                {language === 'ko' ? '삭제' : 'Delete'}
               </Button>
             </div>
           </Card>
@@ -550,9 +630,13 @@ export function EditMedicinePage({
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Pause className="text-amber-600" size={32} />
               </div>
-              <h3 className="font-bold text-gray-800 text-center mb-2 text-[18px]">약을 일시중지하시겠습니까?</h3>
+              <h3 className="font-bold text-gray-800 text-center mb-2 text-[18px]">
+                {language === 'ko' ? '약을 일시중지하시겠습니까?' : 'Pause Medicine?'}
+              </h3>
               <p className="text-sm text-gray-600 text-center text-[16px]">
-                "{formData.name}"을(를) 일시중지하면 모든 알림이 일시적으로 중단됩니다. 약 목록에서 언제든지 다시 시작할 수 있습니다.
+                {language === 'ko' 
+                  ? `"${formData.name}"을(를) 일시중지하면 모든 알림이 일시적으로 중단됩니다. 약 목록에서 언제든지 다시 시작할 수 있습니다.`
+                  : `Pausing "${formData.name}" will temporarily stop all reminders. You can resume it anytime from your medicine list.`}
               </p>
             </div>
             <div className="flex gap-3">
@@ -561,7 +645,7 @@ export function EditMedicinePage({
                 onClick={() => setShowPauseConfirm(false)}
                 className="flex-1 h-11 border-gray-300 text-[16px]"
               >
-                취소
+                {language === 'ko' ? '취소' : 'Cancel'}
               </Button>
               <Button
                 onClick={() => {
@@ -572,7 +656,7 @@ export function EditMedicinePage({
                 }}
                 className="flex-1 h-11 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-[16px]"
               >
-                일시중지
+                {language === 'ko' ? '일시중지' : 'Pause'}
               </Button>
             </div>
           </Card>

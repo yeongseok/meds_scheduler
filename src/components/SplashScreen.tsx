@@ -1,11 +1,13 @@
 import React, { useEffect } from 'react';
 import { Pill, Heart, Shield, Clock } from 'lucide-react';
+import { useLanguage } from './LanguageContext';
 
 interface SplashScreenProps {
   onComplete: () => void;
 }
 
 export function SplashScreen({ onComplete }: SplashScreenProps) {
+  const { language } = useLanguage();
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
@@ -49,10 +51,12 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         {/* App Name */}
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-gray-800">
-            <span className="text-amber-600">메디</span>
-            <span className="text-emerald-500">케어</span>
+            <span className="text-amber-600">{language === 'ko' ? '메디' : 'Medi'}</span>
+            <span className="text-emerald-500">{language === 'ko' ? '케어' : 'Care'}</span>
           </h1>
-          <p className="text-lg text-gray-600">당신의 건강, 우리의 최우선</p>
+          <p className="text-lg text-gray-600">
+            {language === 'ko' ? '당신의 건강, 우리의 최우선' : 'Your health, our priority'}
+          </p>
         </div>
 
         {/* Feature Icons */}
@@ -61,21 +65,27 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center">
               <Pill size={24} className="text-amber-600" />
             </div>
-            <span className="text-xs text-gray-600">복용 기록</span>
+            <span className="text-xs text-gray-600">
+              {language === 'ko' ? '복용 기록' : 'Medication Log'}
+            </span>
           </div>
           
           <div className="flex flex-col items-center space-y-2">
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
               <Clock size={24} className="text-emerald-600" />
             </div>
-            <span className="text-xs text-gray-600">알림 설정</span>
+            <span className="text-xs text-gray-600">
+              {language === 'ko' ? '알림 설정' : 'Reminders'}
+            </span>
           </div>
           
           <div className="flex flex-col items-center space-y-2">
             <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center">
               <Heart size={24} className="text-rose-600" />
             </div>
-            <span className="text-xs text-gray-600">건강 유지</span>
+            <span className="text-xs text-gray-600">
+              {language === 'ko' ? '건강 유지' : 'Stay Healthy'}
+            </span>
           </div>
         </div>
 

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Plus, CheckCircle, Clock, AlertCircle, Heart, Activity, Zap, XCircle, Users, ChevronDown, RotateCcw, X } from 'lucide-react';
+import { Plus, Clock, AlertCircle, Heart, Activity, Zap, XCircle, Users, ChevronDown, RotateCcw, X, UserPlus, Bell, CheckCircle } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { toast } from 'sonner@2.0.3';
 import { motion, AnimatePresence } from 'motion/react';
+import { useLanguage } from './LanguageContext';
+import { SharedHeader, CareRecipient } from './SharedHeader';
 
 interface NewMedicine {
   id: string;
@@ -27,16 +28,18 @@ interface HomePageProps {
   onNavigateToAddMedicine?: () => void;
   newMedicine?: NewMedicine | null;
   onClearNewMedicine?: () => void;
+  selectedView: string;
+  setSelectedView: (view: string) => void;
 }
 
-export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAddMedicine, newMedicine, onClearNewMedicine }: HomePageProps) {
-  const [selectedView, setSelectedView] = useState('my-meds');
+export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAddMedicine, newMedicine, onClearNewMedicine, selectedView, setSelectedView }: HomePageProps) {
+  const { t, language } = useLanguage();
   const [skippedMedicines, setSkippedMedicines] = useState<string[]>([]);
   const [takenMedicines, setTakenMedicines] = useState<string[]>([]);
   const [addedMedicines, setAddedMedicines] = useState<NewMedicine[]>([]);
 
   // Mock data for users I'm a guardian for
-  const careRecipients = [
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
     {
       id: 'person1',
       name: 'Mom (Linda)',
@@ -67,7 +70,8 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
       },
       healthScore: 92
     }
-  ];
+  ]);
+
   // Mock data for today's medicines
   // My medicines data
   const myMedicines = [
@@ -246,8 +250,10 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
   };
 
   const handleSendReminder = () => {
-    toast.success('알림이 전송되었습니다!', {
-      description: `${currentPerson?.name.split(' ')[0]}님에게 약 복용 알림을 보냈습니다.`,
+    toast.success(language === 'ko' ? '알림이 전송되었습니다!' : 'Reminder sent!', {
+      description: language === 'ko' 
+        ? `${currentPerson?.name.split(' ')[0]}님에게 약 복용 알림을 보냈습니다.`
+        : `Medication reminder sent to ${currentPerson?.name.split(' ')[0]}.`,
       duration: 3000,
     });
   };
@@ -270,114 +276,29 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
   const getStatusBadge = (status: string, overdueBy?: string) => {
     switch (status) {
       case 'taken':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-sm">✓ 복용완료</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-sm">✓ {t('home.status.taken')}</Badge>;
       case 'overdue':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-300 animate-pulse text-sm">⚠️ 지연 {overdueBy && `(${overdueBy})`}</Badge>;
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-300 animate-pulse text-sm">⚠️ {t('home.status.overdue')} {overdueBy && `(${overdueBy})`}</Badge>;
       case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 animate-pulse text-sm">⏰ 복용시간</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 animate-pulse text-sm">⏰ {t('home.status.pending')}</Badge>;
       case 'upcoming':
-        return <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">📅  예정</Badge>;
+        return <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">📅 {t('home.status.upcoming')}</Badge>;
       default:
-        return <Badge variant="outline" className="text-sm">알 수 없음</Badge>;
+        return <Badge variant="outline" className="text-sm">{language === 'ko' ? '알 수 없음' : 'Unknown'}</Badge>;
     }
   };
 
   return (
     <div className="h-full overflow-y-auto">
-      {/* Header with Gradient */}
-      <div className="gradient-primary p-6 text-white relative overflow-hidden flex-shrink-0">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-
-              <p className="text-orange-100 text-[20px] font-bold">2025년 1월 24일 금요일</p>
-            </div>
-            <Button 
-              variant="secondary" 
-              size="icon" 
-              className="bg-white/20 hover:bg-white/30 border-0"
-              onClick={onNavigateToSettings}
-            >
-              <Settings size={20} className="text-white" />
-            </Button>
-          </div>
-
-          {/* Health Score */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-white font-medium text-[20px]">
-                {selectedView === 'my-meds' ? "오늘의 건강 점수" : `${currentPerson?.name.split(' ')[0]}의 건강 점수`}
-              </h3>
-              <Heart className="text-orange-200" size={20} />
-            </div>
-            <div className="flex items-center space-x-3">
-              <Progress value={selectedView === 'my-meds' ? 85 : (currentPerson?.healthScore || 85)} className="flex-1 h-3" />
-              <span className="text-white font-bold text-xl text-[18px]">{selectedView === 'my-meds' ? 85 : (currentPerson?.healthScore || 85)}%</span>
-            </div>
-            <p className="text-orange-100 text-base mt-1 text-[18px]">
-              {selectedView === 'my-meds' ? '잘하고 있어요! 계속 유지하세요! 💪' : 
-                (currentPerson?.healthScore || 0) >= 80 ? '🎉 완벽한 복용률!' : 
-                (currentPerson?.healthScore || 0) >= 60 ? '👍 좋은 진전' : '⚠️ 주의 필요'}
-            </p>
-          </div>
-        </div>
-      </div>
+      <SharedHeader
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        careRecipients={careRecipients}
+        setCareRecipients={setCareRecipients}
+        onNavigateToSettings={onNavigateToSettings}
+      />
 
       <div className="p-4 space-y-6 -mt-2">
-        {/* View Switcher */}
-        {careRecipients.length > 0 && (
-          <Card className="bg-white/95 backdrop-blur-sm p-3 border-0 shadow-md">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                {selectedView === 'my-meds' ? (
-                  <Heart className="text-white" size={18} />
-                ) : (
-                  <Users className="text-white" size={18} />
-                )}
-              </div>
-              <Select value={selectedView} onValueChange={setSelectedView}>
-                <SelectTrigger className="flex-1 border-0 bg-amber-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="my-meds">
-                    <div className="flex items-center space-x-2">
-                      <Heart size={16} className="text-amber-500" />
-                      <span className="font-medium text-base">내 약</span>
-                    </div>
-                  </SelectItem>
-                  {careRecipients.map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className={`${person.color} text-white text-sm`}>
-                            {person.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-base">{person.name}</span>
-                        <span className="text-sm text-gray-500">• {person.relation === 'Mother' ? '어머니' : person.relation === 'Father' ? '아버지' : person.relation}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedView !== 'my-meds' && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <p className="text-sm text-gray-600 flex items-center text-[16px]">
-                  <Users size={14} className="mr-1" />
-                  보호자로 보기
-                </p>
-              </div>
-            )}
-          </Card>
-        )}
-
-
-
         {/* Alert for Guardian View with Overdue */}
         {selectedView !== 'my-meds' && (currentPerson?.todayStatus.overdue || 0) > 0 && (
           <Card className="p-4 bg-orange-50 border-orange-200 border-2">
@@ -386,13 +307,14 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                 <AlertCircle className="text-orange-700" size={20} />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-orange-900 mb-1 text-lg text-[18px]">주의 필요</h3>
+                <h3 className="font-semibold text-orange-900 mb-1 text-lg text-[18px]">{t('home.attentionNeeded')}</h3>
                 <p className="text-base text-orange-800 text-[16px]">
-                  {currentPerson?.name.split(' ')[0]}님은 {currentPerson?.todayStatus.overdue}개의 약을 복용하지 않았습니다. 
-                  확인해 주세요.
+                  {language === 'ko' 
+                    ? `${currentPerson?.name.split(' ')[0]}님은 ${currentPerson?.todayStatus.overdue}개의 약을 복용하지 않았습니다. 확인해 주세요.`
+                    : `${currentPerson?.name.split(' ')[0]} ${t('home.overdueMessage').replace('{count}', String(currentPerson?.todayStatus.overdue || 0))}`}
                 </p>
                 <Button className="mt-3 bg-orange-600 hover:bg-orange-700 text-white h-10 text-base" onClick={handleSendReminder}>
-                  알림 보내기
+                  {t('home.sendReminder')}
                 </Button>
               </div>
             </div>
@@ -404,44 +326,37 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-gray-800 flex items-center space-x-2">
               <Activity className="text-amber-600" size={22} />
-              <span className="text-xl font-bold text-[18px]">{selectedView === 'my-meds' ? "오늘의 일정" : `${currentPerson?.name.split(' ')[0]}의 일정`}</span>
+              <span className="text-xl font-bold text-[18px]">
+                {selectedView === 'my-meds' 
+                  ? t('home.todaySchedule')
+                  : language === 'ko' 
+                    ? `${currentPerson?.name.split(' ')[0]}의 일정`
+                    : `${currentPerson?.name.split(' ')[0]}'s Schedule`}
+              </span>
             </h2>
-            {selectedView === 'my-meds' && (
-              <Button 
-                variant="ghost" 
-                className="text-amber-600 hover:text-amber-700 text-base font-bold font-normal h-10 text-[18px]"
-                onClick={onNavigateToAddMedicine}
-              >
-                <Plus size={18} className="mr-1" />
-                추가
-              </Button>
-            )}
           </div>
 
           <div className="space-y-3">
-            <AnimatePresence>
+            <AnimatePresence mode="sync">
               {todayMedicines.map((medicine, index) => (
                 <motion.div
-                  key={medicine.id}
+                  key={`${selectedView}-${medicine.id}`}
                   initial={{ 
                     opacity: 0, 
-                    x: -100,
-                    scale: 0.8
+                    y: 10
                   }}
                   animate={{ 
                     opacity: 1, 
-                    x: 0,
-                    scale: 1
+                    y: 0
                   }}
                   exit={{ 
                     opacity: 0, 
-                    x: 100,
-                    scale: 0.8
+                    y: -10
                   }}
                   transition={{ 
-                    duration: 0.6,
-                    delay: index < addedMedicines.length ? 0 : 0,
-                    ease: [0.4, 0, 0.2, 1]
+                    duration: 0.2,
+                    delay: index * 0.03,
+                    ease: "easeOut"
                   }}
                 >
                   <Card 
@@ -471,7 +386,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                       <p className="text-base text-gray-600">
                         {medicine.dosage} • {medicine.time}
                         {'asNeeded' in medicine && medicine.asNeeded && (
-                          <span className="ml-2 text-sm text-blue-600">• 필요시 복용</span>
+                          <span className="ml-2 text-sm text-blue-600">• {t('home.status.asNeeded')}</span>
                         )}
                       </p>
                       <div className="mt-1">
@@ -483,22 +398,22 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                           <>
                             {medicine.status === 'taken' && 'takenAt' in medicine && (
                               <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-sm">
-                                ✓ {medicine.takenAt} 복용
+                                ✓ {medicine.takenAt} {language === 'ko' ? '복용' : 'taken'}
                               </Badge>
                             )}
                             {medicine.status === 'overdue' && (
                               <Badge className="bg-orange-100 text-orange-800 border-orange-300 text-sm animate-pulse">
-                                ⚠️ 지연 ({medicine.overdueBy})
+                                ⚠️ {t('home.status.overdue')} ({medicine.overdueBy})
                               </Badge>
                             )}
                             {medicine.status === 'pending' && (
                               <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-sm">
-                                ⏰ 복용시간
+                                ⏰ {t('home.status.pending')}
                               </Badge>
                             )}
                             {medicine.status === 'upcoming' && (
                               <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
-                                예정
+                                {t('home.status.upcoming')}
                               </Badge>
                             )}
                           </>
@@ -515,7 +430,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                           className="h-10 px-5 border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 text-base"
                         >
                           <RotateCcw size={16} className="mr-1.5" />
-                          취소
+                          {language === 'ko' ? '취소' : 'Cancel'}
                         </Button>
                       )}
                       {medicine.status === 'overdue' && !takenMedicines.includes(medicine.id) && !skippedMedicines.includes(medicine.id) && (
@@ -524,7 +439,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                             className="h-10 px-5 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white text-base"
                             onClick={() => handleTakeMedicine(medicine.id)}
                           >
-                            지금 복용
+                            {t('home.actions.take')}
                           </Button>
                           {'asNeeded' in medicine && medicine.asNeeded && (
                             <Button 
@@ -532,7 +447,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                               className="h-10 px-5 border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 text-base"
                               onClick={() => handleSkipMedicine(medicine.id)}
                             >
-                              건너뛰기
+                              {t('home.actions.skip')}
                             </Button>
                           )}
                         </>
@@ -543,7 +458,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                             className="h-10 px-5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-base"
                             onClick={() => handleTakeMedicine(medicine.id)}
                           >
-                            지금 복용
+                            {t('home.actions.take')}
                           </Button>
                           {'asNeeded' in medicine && medicine.asNeeded && (
                             <Button 
@@ -551,7 +466,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                               className="h-10 px-5 border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-400 text-base"
                               onClick={() => handleSkipMedicine(medicine.id)}
                             >
-                              건너뛰기
+                              {t('home.actions.skip')}
                             </Button>
                           )}
                         </>
@@ -559,7 +474,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                       {takenMedicines.includes(medicine.id) && (
                         <>
                           <Badge className="bg-green-100 text-green-700 border-green-300 flex items-center gap-1 text-sm">
-                            <CheckCircle size={14} /> 복용완료
+                            <CheckCircle size={14} /> {t('home.status.taken')}
                           </Badge>
                           <Button
                             variant="outline"
@@ -567,14 +482,14 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                             onClick={() => handleUndoTaken(medicine.id)}
                           >
                             <RotateCcw size={16} className="mr-1.5" />
-                            취소
+                            {t('home.actions.undo')}
                           </Button>
                         </>
                       )}
                       {skippedMedicines.includes(medicine.id) && (
                         <>
                           <Badge className="bg-gray-100 text-gray-600 border-gray-300 flex items-center gap-1 text-sm">
-                            <X size={14} /> 건너뜀
+                            <X size={14} /> {language === 'ko' ? '건너뜀' : 'Skipped'}
                           </Badge>
                           <Button
                             variant="outline"
@@ -582,7 +497,7 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
                             onClick={() => handleUndoSkip(medicine.id)}
                           >
                             <RotateCcw size={16} className="mr-1.5" />
-                            취소
+                            {t('home.actions.undo')}
                           </Button>
                         </>
                       )}
@@ -604,36 +519,36 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-gray-800 flex items-center space-x-2">
               <Activity className="text-amber-600" size={20} />
-              <span className="text-[18px] font-bold">이번 주</span>
+              <span className="text-[18px] font-bold">{language === 'ko' ? '이번 주' : 'This Week'}</span>
             </h3>
-            <span className="text-sm text-gray-500">92% 복용률</span>
+            <span className="text-sm text-gray-500">92% {language === 'ko' ? '복용률' : 'Adherence'}</span>
           </div>
           
           <div className="space-y-2">
             <Progress value={92} className="h-3" />
             <div className="flex justify-between text-xs text-gray-500">
-              <span>월</span>
-              <span>화</span>
-              <span>수</span>
-              <span>목</span>
-              <span>금</span>
-              <span>토</span>
-              <span>일</span>
+              <span>{language === 'ko' ? '월' : 'M'}</span>
+              <span>{language === 'ko' ? '화' : 'T'}</span>
+              <span>{language === 'ko' ? '수' : 'W'}</span>
+              <span>{language === 'ko' ? '목' : 'T'}</span>
+              <span>{language === 'ko' ? '금' : 'F'}</span>
+              <span>{language === 'ko' ? '토' : 'S'}</span>
+              <span>{language === 'ko' ? '일' : 'S'}</span>
             </div>
           </div>
           
           <div className="flex justify-between mt-4 text-sm">
             <div className="text-center">
               <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">28회 복용</span>
+              <span className="text-gray-600">{language === 'ko' ? '28회 복용' : '28 Taken'}</span>
             </div>
             <div className="text-center">
               <div className="w-3 h-3 bg-orange-500 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">2회 누락</span>
+              <span className="text-gray-600">{language === 'ko' ? '2회 누락' : '2 Missed'}</span>
             </div>
             <div className="text-center">
               <div className="w-3 h-3 bg-stone-400 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">5회 예정</span>
+              <span className="text-gray-600">{language === 'ko' ? '5회 예정' : '5 Upcoming'}</span>
             </div>
           </div>
         </Card>

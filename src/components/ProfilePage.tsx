@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, User, Mail, Phone, Calendar as CalendarIcon, MapPin, Shield, Camera, Edit2, Save } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Calendar as CalendarIcon, Camera, Edit2, Save } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -18,12 +18,7 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
     firstName: 'Sarah',
     lastName: 'Johnson',
     email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main Street, Apt 4B',
-    city: 'New York',
-    zipCode: '10001',
-    emergencyContact: 'John Johnson',
-    emergencyPhone: '+1 (555) 987-6543'
+    phone: '+1 (555) 123-4567'
   });
 
   const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(1990, 4, 15));
@@ -190,88 +185,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 type="tel"
                 value={profileData.phone}
                 onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                disabled={!isEditing}
-                className="pl-10 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Address Information */}
-        <Card className="medicine-card p-4 space-y-4 border-0">
-          <h3 className="flex items-center space-x-2 text-gray-800">
-            <MapPin className="text-amber-600" size={20} />
-            <span className="text-[16px] font-bold">주소</span>
-          </h3>
-          
-          <div className="space-y-3">
-            <Label htmlFor="address" className="text-gray-700">도로명 주소</Label>
-            <Input
-              id="address"
-              value={profileData.address}
-              onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-              disabled={!isEditing}
-              className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <Label htmlFor="city" className="text-gray-700">도시</Label>
-              <Input
-                id="city"
-                value={profileData.city}
-                onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
-                disabled={!isEditing}
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
-              />
-            </div>
-            <div className="space-y-3">
-              <Label htmlFor="zip" className="text-gray-700">우편번호</Label>
-              <Input
-                id="zip"
-                value={profileData.zipCode}
-                onChange={(e) => setProfileData({ ...profileData, zipCode: e.target.value })}
-                disabled={!isEditing}
-                className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
-              />
-            </div>
-          </div>
-        </Card>
-
-        {/* Emergency Contact */}
-        <Card className="medicine-card p-4 space-y-4 border-0">
-          <h3 className="flex items-center space-x-2 text-gray-800">
-            <Shield className="text-amber-600" size={20} />
-            <span className="text-[16px] font-bold">긴급 연락처</span>
-          </h3>
-          
-          <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl">
-            <p className="text-xs text-gray-600">
-              긴급 상황 시 이 사람에게 연락합니다
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="emergency-contact" className="text-gray-700">연락처 이름</Label>
-            <Input
-              id="emergency-contact"
-              value={profileData.emergencyContact}
-              onChange={(e) => setProfileData({ ...profileData, emergencyContact: e.target.value })}
-              disabled={!isEditing}
-              className="border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
-            />
-          </div>
-
-          <div className="space-y-3">
-            <Label htmlFor="emergency-phone" className="text-gray-700">연락처 전화번호</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-amber-500" size={18} />
-              <Input
-                id="emergency-phone"
-                type="tel"
-                value={profileData.emergencyPhone}
-                onChange={(e) => setProfileData({ ...profileData, emergencyPhone: e.target.value })}
                 disabled={!isEditing}
                 className="pl-10 border-gray-200 focus:border-blue-400 focus:ring-blue-400/20 bg-white disabled:opacity-70"
               />

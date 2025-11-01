@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, Heart, Shield, Pill, Smartphone } from 'lucide
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
+import { useLanguage } from './LanguageContext';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -11,6 +12,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassword }: LoginPageProps) {
+  const { t, language } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,10 +55,12 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
           </div>
           
           <h1 className="mb-2 text-3xl">
-            <span className="text-amber-600">메디</span>
-            <span className="text-emerald-500">케어</span>
+            <span className="text-amber-600">{language === 'ko' ? '메디' : 'Medi'}</span>
+            <span className="text-emerald-500">{language === 'ko' ? '케어' : 'Care'}</span>
           </h1>
-          <p className="text-gray-600 text-base">다시 오신 것을 환영합니다! 로그인해주세요</p>
+          <p className="text-gray-600 text-base">
+            {language === 'ko' ? '다시 오신 것을 환영합니다! 로그인해주세요' : 'Welcome back! Please sign in'}
+          </p>
         </div>
 
         {/* Login Card */}
@@ -64,7 +68,9 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Input */}
             <div className="space-y-2">
-              <label className="text-base text-gray-700 text-[16px]">이메일 주소</label>
+              <label className="text-base text-gray-700 text-[16px]">
+                {language === 'ko' ? '이메일 주소' : 'Email Address'}
+              </label>
               <div className="relative">
                 <Mail size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
@@ -80,14 +86,16 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label className="text-base text-gray-700 text-[16px]">비밀번호</label>
+              <label className="text-base text-gray-700 text-[16px]">
+                {language === 'ko' ? '비밀번호' : 'Password'}
+              </label>
               <div className="relative">
                 <Lock size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="비밀번호를 입력하세요"
+                  placeholder={language === 'ko' ? '비밀번호를 입력하세요' : 'Enter your password'}
                   className="pl-12 pr-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50 text-base"
                   required
                 />
@@ -108,7 +116,7 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
                 onClick={onNavigateToForgotPassword}
                 className="text-base text-amber-600 hover:text-amber-700 hover:underline"
               >
-                비밀번호를 잊으셨나요?
+                {language === 'ko' ? '비밀번호를 잊으셨나요?' : 'Forgot your password?'}
               </button>
             </div>
 
@@ -117,7 +125,7 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
               type="submit"
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base"
             >
-              로그인
+              {t('login.signIn')}
             </Button>
           </form>
         </Card>
@@ -125,12 +133,12 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
         {/* Sign Up Link */}
         <div className="text-center mt-6">
           <p className="text-gray-600 text-base">
-            계정이 없으신가요?{' '}
+            {language === 'ko' ? '계정이 없으신가요?' : "Don't have an account?"}{' '}
             <button
               onClick={onNavigateToSignUp}
               className="text-amber-600 hover:text-amber-700 hover:underline text-base"
             >
-              회원가입
+              {t('login.signUp')}
             </button>
           </p>
         </div>
@@ -143,7 +151,7 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
             </div>
             <div className="relative flex justify-center">
               <span className="px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-sm text-gray-500 text-[14px]">
-                또는 다음으로 계속하기
+                {language === 'ko' ? '또는 다음으로 계속하기' : 'Or continue with'}
               </span>
             </div>
           </div>
@@ -154,7 +162,9 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                 <path d="M12 3C7.03 3 3 6.58 3 11c0 2.37 1.32 4.47 3.35 5.86-.14.58-.95 3.27-1.06 3.73-.13.54.19.53.4.38.16-.1 2.54-1.71 3.47-2.34.81.18 1.67.27 2.55.27 4.97 0 9-3.58 9-8s-4.03-8-9-8z" fill="#3C1E1E"/>
               </svg>
-              <span className="text-sm text-gray-800 text-[14px]">카카오</span>
+              <span className="text-sm text-gray-800 text-[14px]">
+                {language === 'ko' ? '카카오' : 'Kakao'}
+              </span>
             </button>
 
             {/* Google */}
@@ -177,19 +187,25 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-sm text-gray-700 text-[14px]">구글</span>
+              <span className="text-sm text-gray-700 text-[14px]">
+                {language === 'ko' ? '구글' : 'Google'}
+              </span>
             </button>
 
             {/* Email */}
             <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
               <Mail size={20} className="text-amber-600" />
-              <span className="text-sm text-gray-700 text-[14px]">이메일</span>
+              <span className="text-sm text-gray-700 text-[14px]">
+                {language === 'ko' ? '이메일' : 'Email'}
+              </span>
             </button>
 
             {/* Phone */}
             <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
               <Smartphone size={20} className="text-emerald-600" />
-              <span className="text-sm text-gray-700 text-[14px]">휴대폰</span>
+              <span className="text-sm text-gray-700 text-[14px]">
+                {language === 'ko' ? '휴대폰' : 'Phone'}
+              </span>
             </button>
           </div>
         </div>

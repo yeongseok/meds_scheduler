@@ -6,11 +6,11 @@ import {
   Smartphone, 
   Moon, 
   ChevronRight,
-  Download,
   Trash2,
   FileText,
   X,
-  LogOut
+  LogOut,
+  Globe
 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Switch } from './ui/switch';
@@ -34,18 +34,20 @@ import {
   DialogTitle,
 } from './ui/dialog';
 import { ScrollArea } from './ui/scroll-area';
+import { useLanguage } from './LanguageContext';
 
 interface SettingsPageProps {
   onNavigateToProfile?: () => void;
   onLogout?: () => void;
+  onTestAlarm?: () => void;
 }
 
-export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProps) {
+export function SettingsPage({ onNavigateToProfile, onLogout, onTestAlarm }: SettingsPageProps) {
+  const { t, language, setLanguage } = useLanguage();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
@@ -86,14 +88,14 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
     <div className="h-full overflow-y-auto">
       <div className="p-4 space-y-6">
         {/* Header */}
-        <h1 className="text-2xl font-bold">설정</h1>
+        <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
 
         {/* Profile Section */}
         <Card>
           <SettingItem
             icon={User}
-            title="프로필"
-            description="개인 정보 관리"
+            title={t('settings.profile')}
+            description={t('settings.viewProfile')}
             onClick={onNavigateToProfile}
           />
         </Card>
@@ -103,14 +105,14 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
           <div className="p-4 border-b border-border">
             <h3 className="flex items-center space-x-2">
               <Bell size={18} />
-              <span>알림</span>
+              <span>{t('settings.notifications')}</span>
             </h3>
           </div>
           
           <SettingItem
             icon={Bell}
-            title="알림 활성화"
-            description="약 복용 알림 받기"
+            title={t('settings.notifications')}
+            description={t('settings.notificationsDesc')}
             action={
               <Switch
                 checked={notificationsEnabled}
@@ -124,8 +126,8 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
               <Separator />
               <SettingItem
                 icon={Smartphone}
-                title="소리"
-                description="알림 소리 재생"
+                title={t('settings.sound')}
+                description={t('settings.soundDesc')}
                 action={
                   <Switch
                     checked={soundEnabled}
@@ -137,8 +139,8 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
               <Separator />
               <SettingItem
                 icon={Smartphone}
-                title="진동"
-                description="알림 수신 시 진동"
+                title={t('settings.vibration')}
+                description={t('settings.vibrationDesc')}
                 action={
                   <Switch
                     checked={vibrationEnabled}
@@ -146,8 +148,55 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
                   />
                 }
               />
+              
+              {onTestAlarm && (
+                <>
+                  <Separator />
+                  <SettingItem
+                    icon={Bell}
+                    title={t('settings.testAlarm')}
+                    description={t('settings.testAlarmDesc')}
+                    onClick={onTestAlarm}
+                  />
+                </>
+              )}
             </>
           )}
+        </Card>
+
+        {/* Language */}
+        <Card className="space-y-0">
+          <div className="p-4 border-b border-border">
+            <h3 className="flex items-center space-x-2">
+              <Globe size={18} />
+              <span>{t('settings.language')}</span>
+            </h3>
+          </div>
+          
+          <SettingItem
+            icon={Globe}
+            title={t('settings.korean')}
+            description="한국어"
+            action={
+              <Switch
+                checked={language === 'ko'}
+                onCheckedChange={(checked) => setLanguage(checked ? 'ko' : 'en')}
+              />
+            }
+          />
+          
+          <Separator />
+          <SettingItem
+            icon={Globe}
+            title={t('settings.english')}
+            description="English"
+            action={
+              <Switch
+                checked={language === 'en'}
+                onCheckedChange={(checked) => setLanguage(checked ? 'en' : 'ko')}
+              />
+            }
+          />
         </Card>
 
         {/* Appearance */}
@@ -155,14 +204,14 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
           <div className="p-4 border-b border-border">
             <h3 className="flex items-center space-x-2">
               <Moon size={18} />
-              <span>모양</span>
+              <span>{t('settings.theme')}</span>
             </h3>
           </div>
           
           <SettingItem
             icon={Moon}
-            title="다크 모드"
-            description="어두운 테마 사용"
+            title={t('settings.darkMode')}
+            description={t('settings.darkModeDesc')}
             action={
               <Switch
                 checked={darkMode}
@@ -177,22 +226,14 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
           <div className="p-4 border-b border-border">
             <h3 className="flex items-center space-x-2">
               <Shield size={18} />
-              <span>데이터 및 개인정보</span>
+              <span>{t('settings.data')}</span>
             </h3>
           </div>
           
           <SettingItem
-            icon={Download}
-            title="데이터 내보내기"
-            description="약 데이터 다운로드"
-            onClick={() => setShowExportDialog(true)}
-          />
-          
-          <Separator />
-          <SettingItem
             icon={Trash2}
-            title="모든 데이터 삭제"
-            description="모든 데이터 영구 삭제"
+            title={t('settings.deleteAllData')}
+            description={t('settings.deleteDataDesc')}
             onClick={() => setShowDeleteDialog(true)}
           />
         </Card>
@@ -202,22 +243,20 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
           <div className="p-4 border-b border-border">
             <h3 className="flex items-center space-x-2">
               <FileText size={18} />
-              <span>법적 고지</span>
+              <span>{t('settings.legal')}</span>
             </h3>
           </div>
           
           <SettingItem
             icon={FileText}
-            title="서비스 이용약관"
-            description="이용 약관 읽기"
+            title={t('settings.terms')}
             onClick={() => setShowTermsDialog(true)}
           />
           
           <Separator />
           <SettingItem
             icon={Shield}
-            title="개인정보 처리방침"
-            description="데이터 보호 방법 알아보기"
+            title={t('settings.privacy')}
             onClick={() => setShowPrivacyDialog(true)}
           />
         </Card>
@@ -226,8 +265,7 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
         <Card>
           <SettingItem
             icon={LogOut}
-            title="로그아웃"
-            description="계정에서 로그아웃"
+            title={t('settings.logout')}
             onClick={() => setShowLogoutDialog(true)}
           />
         </Card>
@@ -235,10 +273,10 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
         {/* App Info */}
         <Card>
           <div className="p-4 text-center space-y-2">
-            <h3>메디리마인드</h3>
-            <p className="text-sm text-muted-foreground">버전 1.0.0</p>
+            <h3>{language === 'ko' ? '메디리마인드' : 'MediRemind'}</h3>
+            <p className="text-sm text-muted-foreground">{t('settings.version')} 1.0.0</p>
             <p className="text-xs text-muted-foreground">
-              안전한 약 복용 관리를 위해 만들어졌습니다
+              {language === 'ko' ? '안전한 약 복용 관리를 위해 만들어졌습니다' : 'Built for safe medication management'}
             </p>
           </div>
         </Card>
@@ -247,38 +285,17 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
         <div className="h-20"></div>
       </div>
 
-      {/* Export Data Dialog */}
-      <AlertDialog open={showExportDialog} onOpenChange={setShowExportDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>데이터 내보내기</AlertDialogTitle>
-            <AlertDialogDescription>
-              약 데이터가 CSV 파일로 다운로드됩니다. 모든 약, 일정 및 기록이 포함됩니다.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
-            <AlertDialogAction onClick={() => {
-              // Handle export logic here
-              console.log('Exporting data...');
-            }}>
-              내보내기
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {/* Delete All Data Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>모든 데이터를 삭제하시겠습니까?</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.deleteConfirm')}</AlertDialogTitle>
             <AlertDialogDescription>
-              이 작업은 취소할 수 없습니다. 앱의 모든 약, 일정 및 기록이 영구적으로 삭제됩니다.
+              {t('settings.deleteWarning')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               className="bg-red-600 hover:bg-red-700"
               onClick={() => {
@@ -286,7 +303,7 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
                 console.log('Deleting all data...');
               }}
             >
-              모두 삭제
+              {t('common.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -452,20 +469,20 @@ export function SettingsPage({ onNavigateToProfile, onLogout }: SettingsPageProp
       <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>로그아웃</AlertDialogTitle>
+            <AlertDialogTitle>{t('settings.logout')}</AlertDialogTitle>
             <AlertDialogDescription>
-              로그아웃하시겠습니까? 약 복용 알림에 액세스하려면 다시 로그인해야 합니다.
+              {t('settings.logoutConfirm')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={() => {
                 setShowLogoutDialog(false);
                 onLogout?.();
               }}
             >
-              로그아웃
+              {t('settings.logout')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from './ui/dial
 import { Progress } from './ui/progress';
 import { toast } from 'sonner@2.0.3';
 import { TimePicker } from './TimePicker';
+import { useLanguage } from './LanguageContext';
 
 interface NewMedicine {
   id: string;
@@ -35,16 +36,17 @@ interface AddMedicineWizardProps {
   onAddMedicine?: (medicine: NewMedicine) => void;
 }
 
-const STEPS = [
-  { id: 1, title: '복용대상', icon: Users },
-  { id: 2, title: '약 사진', icon: Camera },
-  { id: 3, title: '기본 정보', icon: Pill },
-  { id: 4, title: '일정', icon: CalendarIcon },
-  { id: 5, title: '의료 정보', icon: FileText },
-];
-
 export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicineWizardProps) {
+  const { language } = useLanguage();
   const [currentStep, setCurrentStep] = useState(1);
+  
+  const STEPS = [
+    { id: 1, title: language === 'ko' ? '복용대상' : 'Recipients', icon: Users },
+    { id: 2, title: language === 'ko' ? '약 사진' : 'Photo', icon: Camera },
+    { id: 3, title: language === 'ko' ? '기본 정보' : 'Basic Info', icon: Pill },
+    { id: 4, title: language === 'ko' ? '일정' : 'Schedule', icon: CalendarIcon },
+    { id: 5, title: language === 'ko' ? '의료 정보' : 'Medical Info', icon: FileText },
+  ];
   
   // Form states
   const [selectedUsers, setSelectedUsers] = useState<string[]>(['myself']);
@@ -53,7 +55,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
   const [medicineType, setMedicineType] = useState('');
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({ from: new Date(), to: undefined });
   const [selectedDays, setSelectedDays] = useState<string[]>(['일', '월', '화', '수', '목', '금', '토']);
-  const [doseTimes, setDoseTimes] = useState<string[]>(['09:00', '21:00']);
+  const [doseTimes, setDoseTimes] = useState<string[]>(['09:00']);
   const [asNeeded, setAsNeeded] = useState(false);
   const [takingTime, setTakingTime] = useState('');
   const [prescribedBy, setPrescribedBy] = useState('');
@@ -62,7 +64,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
   const [sideEffects, setSideEffects] = useState('');
   const [medicalNotes, setMedicalNotes] = useState('');
 
-  const daysOfWeek = [
+  const daysOfWeek = language === 'ko' ? [
     { id: '일', label: '일' },
     { id: '월', label: '월' },
     { id: '화', label: '화' },
@@ -70,21 +72,29 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
     { id: '목', label: '목' },
     { id: '금', label: '금' },
     { id: '토', label: '토' }
+  ] : [
+    { id: 'Sun', label: 'Sun' },
+    { id: 'Mon', label: 'Mon' },
+    { id: 'Tue', label: 'Tue' },
+    { id: 'Wed', label: 'Wed' },
+    { id: 'Thu', label: 'Thu' },
+    { id: 'Fri', label: 'Fri' },
+    { id: 'Sat', label: 'Sat' }
   ];
 
   const careRecipients = [
-    { id: 'person1', name: 'Mom (Linda)', initials: 'LM', color: 'bg-orange-300', relation: '어머니' },
-    { id: 'person2', name: 'Dad (Robert)', initials: 'RM', color: 'bg-amber-400', relation: '아버지' }
+    { id: 'person1', name: 'Mom (Linda)', initials: 'LM', color: 'bg-orange-300', relation: language === 'ko' ? '어머니' : 'Mother' },
+    { id: 'person2', name: 'Dad (Robert)', initials: 'RM', color: 'bg-amber-400', relation: language === 'ko' ? '아버지' : 'Father' }
   ];
 
   const medicineTypes = [
-    { value: 'tablet', label: '정제', icon: Pill, color: 'from-amber-400 to-orange-600', bgColor: 'bg-amber-50' },
-    { value: 'capsule', label: '캡슐', icon: Pill, color: 'from-orange-400 to-amber-600', bgColor: 'bg-orange-50' },
-    { value: 'liquid', label: '액상', icon: Droplets, color: 'from-amber-300 to-orange-500', bgColor: 'bg-amber-50' },
-    { value: 'injection', label: '주사', icon: Syringe, color: 'from-orange-400 to-red-600', bgColor: 'bg-orange-50' },
-    { value: 'drops', label: '점안액', icon: Droplets, color: 'from-stone-400 to-amber-600', bgColor: 'bg-stone-50' },
-    { value: 'inhaler', label: '흡입기', icon: Pill, color: 'from-orange-400 to-orange-600', bgColor: 'bg-orange-50' },
-    { value: 'cream', label: '크림', icon: Sparkles, color: 'from-orange-300 to-amber-500', bgColor: 'bg-orange-50' }
+    { value: 'tablet', label: language === 'ko' ? '정제' : 'Tablet', icon: Pill, color: 'from-amber-400 to-orange-600', bgColor: 'bg-amber-50' },
+    { value: 'capsule', label: language === 'ko' ? '캡슐' : 'Capsule', icon: Pill, color: 'from-orange-400 to-amber-600', bgColor: 'bg-orange-50' },
+    { value: 'liquid', label: language === 'ko' ? '액상' : 'Liquid', icon: Droplets, color: 'from-amber-300 to-orange-500', bgColor: 'bg-amber-50' },
+    { value: 'injection', label: language === 'ko' ? '주사' : 'Injection', icon: Syringe, color: 'from-orange-400 to-red-600', bgColor: 'bg-orange-50' },
+    { value: 'drops', label: language === 'ko' ? '점안액' : 'Drops', icon: Droplets, color: 'from-stone-400 to-amber-600', bgColor: 'bg-stone-50' },
+    { value: 'inhaler', label: language === 'ko' ? '흡입기' : 'Inhaler', icon: Pill, color: 'from-orange-400 to-orange-600', bgColor: 'bg-orange-50' },
+    { value: 'cream', label: language === 'ko' ? '크림' : 'Cream', icon: Sparkles, color: 'from-orange-300 to-amber-500', bgColor: 'bg-orange-50' }
   ];
 
   const toggleUserSelection = (userId: string) => {
@@ -127,11 +137,11 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
 
   const handleSave = () => {
     if (!medicineName.trim()) {
-      toast.error('약 이름을 입력해주세요');
+      toast.error(language === 'ko' ? '약 이름을 입력해주세요' : 'Please enter medication name');
       return;
     }
     if (!dosage.trim()) {
-      toast.error('용량을 입력해주세요');
+      toast.error(language === 'ko' ? '용량을 입력해주세요' : 'Please enter dosage');
       return;
     }
 
@@ -139,7 +149,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
     const color = selectedType?.color || 'from-amber-200 to-orange-300';
     const bgColor = selectedType?.bgColor || 'bg-amber-50';
 
-    let timeDisplay = '필요시';
+    let timeDisplay = language === 'ko' ? '필요시' : 'As needed';
     if (!asNeeded && doseTimes.length > 0) {
       const firstTime = doseTimes[0];
       const [hours, minutes] = firstTime.split(':');
@@ -161,7 +171,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
       asNeeded: asNeeded
     };
 
-    toast.success(`${medicineName} 약이 저장되었습니다! 💊`);
+    toast.success(language === 'ko' 
+      ? `${medicineName} 약이 저장되었습니다! 💊`
+      : `${medicineName} has been saved! 💊`);
     
     if (onAddMedicine) {
       onAddMedicine(newMedicine);
@@ -183,8 +195,12 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">복용 대상</h3>
-              <p className="text-[18px] text-gray-600">이 약을 복용할 사람을 선택하세요</p>
+              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">
+                {language === 'ko' ? '복용 대상' : 'Who is taking this medication?'}
+              </h3>
+              <p className="text-[18px] text-gray-600">
+                {language === 'ko' ? '이 약을 복용할 사람을 선택하세요' : 'Select who will take this medication'}
+              </p>
             </div>
 
             <div className="space-y-3">
@@ -201,12 +217,12 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-[14px]">
-                        나
+                        {language === 'ko' ? '나' : 'Me'}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold text-gray-800 text-[16px]">나</p>
-                      <p className="text-[14px] text-gray-600">내 약에 추가</p>
+                      <p className="font-semibold text-gray-800 text-[16px]">{language === 'ko' ? '나' : 'Myself'}</p>
+                      <p className="text-[14px] text-gray-600">{language === 'ko' ? '내 약에 추가' : 'Add to my medications'}</p>
                     </div>
                   </div>
                   {selectedUsers.includes('myself') && (
@@ -256,16 +272,24 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">약 사진 (선택사항)</h3>
-              <p className="text-[18px] text-gray-600">약을 쉽게 식별할 수 있도록 사진을 추가하세요</p>
+              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">
+                {language === 'ko' ? '약 사진 (선택사항)' : 'Medication Photo (Optional)'}
+              </h3>
+              <p className="text-[18px] text-gray-600">
+                {language === 'ko' ? '약을 쉽게 식별할 수 있도록 사진을 추가하세요' : 'Add a photo to easily identify your medication'}
+              </p>
             </div>
 
             <div className="border-2 border-dashed border-amber-200 rounded-2xl p-8 text-center bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 transition-colors cursor-pointer">
               <div className="w-16 h-16 bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <Camera size={28} className="text-white" />
               </div>
-              <p className="text-gray-600 font-medium text-[16px]">탭하여 사진 추가</p>
-              <p className="text-[14px] text-gray-500 mt-1">약을 쉽게 식별할 수 있습니다</p>
+              <p className="text-gray-600 font-medium text-[16px]">
+                {language === 'ko' ? '탭하여 사진 추가' : 'Tap to add photo'}
+              </p>
+              <p className="text-[14px] text-gray-500 mt-1">
+                {language === 'ko' ? '약을 쉽게 식별할 수 있습니다' : 'Helps you identify your medication'}
+              </p>
             </div>
           </div>
         );
@@ -274,15 +298,21 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">기본 정보</h3>
-              <p className="text-[18px] text-gray-600">약의 기본 정보를 입력하세요</p>
+              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">
+                {language === 'ko' ? '기본 정보' : 'Basic Information'}
+              </h3>
+              <p className="text-[18px] text-gray-600">
+                {language === 'ko' ? '약의 기본 정보를 입력하세요' : 'Enter basic medication information'}
+              </p>
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="medicine-name" className="text-gray-700 text-[16px]">약 이름 *</Label>
+              <Label htmlFor="medicine-name" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '약 이름 *' : 'Medication Name *'}
+              </Label>
               <Input
                 id="medicine-name"
-                placeholder="약 이름 입력"
+                placeholder={language === 'ko' ? '약 이름 입력' : 'Enter medication name'}
                 value={medicineName}
                 onChange={(e) => setMedicineName(e.target.value)}
                 className="border-gray-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white text-[16px] h-12"
@@ -291,20 +321,24 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
-                <Label htmlFor="dosage" className="text-gray-700 text-[16px]">용량 *</Label>
+                <Label htmlFor="dosage" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '용량 *' : 'Dosage *'}
+                </Label>
                 <Input
                   id="dosage"
-                  placeholder="예: 500mg"
+                  placeholder={language === 'ko' ? '예: 500mg' : 'e.g., 500mg'}
                   value={dosage}
                   onChange={(e) => setDosage(e.target.value)}
                   className="border-gray-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white text-[16px] h-12"
                 />
               </div>
               <div className="space-y-3">
-                <Label htmlFor="medicine-type" className="text-gray-700 text-[16px]">유형</Label>
+                <Label htmlFor="medicine-type" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '유형' : 'Type'}
+                </Label>
                 <Select value={medicineType} onValueChange={setMedicineType}>
                   <SelectTrigger className="border-gray-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white h-12">
-                    <SelectValue placeholder="유형 선택" />
+                    <SelectValue placeholder={language === 'ko' ? '유형 선택' : 'Select type'} />
                   </SelectTrigger>
                   <SelectContent>
                     {medicineTypes.map((type) => {
@@ -326,18 +360,32 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
             </div>
 
             <div className="space-y-3">
-              <Label htmlFor="taking-time" className="text-gray-700 text-[16px]">복용 시기</Label>
+              <Label htmlFor="taking-time" className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '복용 시기' : 'When to Take'}
+              </Label>
               <Select value={takingTime} onValueChange={setTakingTime}>
                 <SelectTrigger className="border-gray-200 focus:border-amber-400 focus:ring-amber-400/20 bg-white h-12">
-                  <SelectValue placeholder="복용 시기 선택" />
+                  <SelectValue placeholder={language === 'ko' ? '복용 시기 선택' : 'Select timing'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="before-meals"><span className="text-[16px]">🍽️ 식전</span></SelectItem>
-                  <SelectItem value="after-meals"><span className="text-[16px]">🍽️ 식후</span></SelectItem>
-                  <SelectItem value="with-meals"><span className="text-[16px]">🍽️ 식사와 함께</span></SelectItem>
-                  <SelectItem value="empty-stomach"><span className="text-[16px]">⭕ 공복</span></SelectItem>
-                  <SelectItem value="bedtime"><span className="text-[16px]">🛏️ 취침 시</span></SelectItem>
-                  <SelectItem value="anytime"><span className="text-[16px]">⏰ 언제든지</span></SelectItem>
+                  <SelectItem value="before-meals">
+                    <span className="text-[16px]">🍽️ {language === 'ko' ? '식전' : 'Before meals'}</span>
+                  </SelectItem>
+                  <SelectItem value="after-meals">
+                    <span className="text-[16px]">🍽️ {language === 'ko' ? '식후' : 'After meals'}</span>
+                  </SelectItem>
+                  <SelectItem value="with-meals">
+                    <span className="text-[16px]">🍽️ {language === 'ko' ? '식사와 함께' : 'With meals'}</span>
+                  </SelectItem>
+                  <SelectItem value="empty-stomach">
+                    <span className="text-[16px]">⭕ {language === 'ko' ? '공복' : 'Empty stomach'}</span>
+                  </SelectItem>
+                  <SelectItem value="bedtime">
+                    <span className="text-[16px]">🛏️ {language === 'ko' ? '취침 시' : 'At bedtime'}</span>
+                  </SelectItem>
+                  <SelectItem value="anytime">
+                    <span className="text-[16px]">⏰ {language === 'ko' ? '언제든지' : 'Anytime'}</span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -348,13 +396,19 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">일정</h3>
-              <p className="text-[18px] text-gray-600">복용 일정을 설정하세요</p>
+              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">
+                {language === 'ko' ? '일정' : 'Schedule'}
+              </h3>
+              <p className="text-[18px] text-gray-600">
+                {language === 'ko' ? '복용 일정을 설정하세요' : 'Set your medication schedule'}
+              </p>
             </div>
 
             {/* Date Range */}
             <div className="space-y-3">
-              <Label className="text-gray-700 text-[16px]">복용 기간</Label>
+              <Label className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '복용 기간' : 'Duration'}
+              </Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -371,7 +425,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
                         dateRange.from.toLocaleDateString()
                       )
                     ) : (
-                      <span className="text-gray-400">시작 및 종료 날짜 선택</span>
+                      <span className="text-gray-400">
+                        {language === 'ko' ? '시작 및 종료 날짜 선택' : 'Select start and end date'}
+                      </span>
                     )}
                   </Button>
                 </PopoverTrigger>
@@ -389,7 +445,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
 
             {/* Days of Week */}
             <div className="space-y-3">
-              <Label className="text-gray-700 text-[16px]">복용 요일</Label>
+              <Label className="text-gray-700 text-[16px]">
+                {language === 'ko' ? '복용 요일' : 'Days of Week'}
+              </Label>
               
               <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
                 <Checkbox 
@@ -399,7 +457,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
                   className="border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
                 />
                 <Label htmlFor="select-all-days" className="text-gray-700 cursor-pointer flex-1 text-[16px]">
-                  매일
+                  {language === 'ko' ? '매일' : 'Every day'}
                 </Label>
               </div>
 
@@ -424,7 +482,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
             {/* Dose Times */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-gray-700 text-[16px]">복용 시간</Label>
+                <Label className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '복용 시간' : 'Dose Times'}
+                </Label>
                 {!asNeeded && (
                   <Button
                     type="button"
@@ -432,7 +492,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
                     className="h-8 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-xl text-[14px]"
                   >
                     <Plus size={14} className="mr-1" />
-                    시간 추가
+                    {language === 'ko' ? '시간 추가' : 'Add time'}
                   </Button>
                 )}
               </div>
@@ -446,10 +506,10 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
                 />
                 <div className="flex-1">
                   <Label htmlFor="as-needed" className="text-gray-800 font-medium cursor-pointer text-[16px]">
-                    필요시 복용 (PRN)
+                    {language === 'ko' ? '필요시 복용 (PRN)' : 'As needed (PRN)'}
                   </Label>
                   <p className="text-[16px] text-gray-600 mt-0.5">
-                    정기 일정이 아닌, 필요할 때만 복용
+                    {language === 'ko' ? '정기 일정이 아닌, 필요할 때만 복용' : 'Take only when needed, not on a schedule'}
                   </p>
                 </div>
               </div>
@@ -490,13 +550,19 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
         return (
           <div className="space-y-4">
             <div>
-              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">의료 정보</h3>
-              <p className="text-[18px] text-gray-600">처방 및 의료 정보를 입력하세요</p>
+              <h3 className="text-[18px] font-semibold text-gray-800 mb-2">
+                {language === 'ko' ? '의료 정보' : 'Medical Information'}
+              </h3>
+              <p className="text-[18px] text-gray-600">
+                {language === 'ko' ? '처방 및 의료 정보를 입력하세요' : 'Enter prescription and medical details'}
+              </p>
             </div>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="prescribed-by" className="text-gray-700 text-[16px]">처방의</Label>
+                <Label htmlFor="prescribed-by" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '처방의' : 'Prescribed By'}
+                </Label>
                 <Input
                   id="prescribed-by"
                   placeholder="Dr. Sarah Johnson"
@@ -507,7 +573,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pharmacy" className="text-gray-700 text-[16px]">약국</Label>
+                <Label htmlFor="pharmacy" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '약국' : 'Pharmacy'}
+                </Label>
                 <Input
                   id="pharmacy"
                   placeholder="MediCare Pharmacy"
@@ -518,10 +586,12 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="instructions" className="text-gray-700 text-[16px]">복용 지시</Label>
+                <Label htmlFor="instructions" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '복용 지시' : 'Instructions'}
+                </Label>
                 <Textarea
                   id="instructions"
-                  placeholder="음식과 함께 복용. 알코올 피하기."
+                  placeholder={language === 'ko' ? '음식과 함께 복용. 알코올 피하기.' : 'Take with food. Avoid alcohol.'}
                   value={instructions}
                   onChange={(e) => setInstructions(e.target.value)}
                   rows={2}
@@ -530,10 +600,12 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="side-effects" className="text-gray-700 text-[16px]">부작용</Label>
+                <Label htmlFor="side-effects" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '부작용' : 'Side Effects'}
+                </Label>
                 <Textarea
                   id="side-effects"
-                  placeholder="현기증, 마른 기침 유발 가능"
+                  placeholder={language === 'ko' ? '현기증, 마른 기침 유발 가능' : 'May cause dizziness, dry cough'}
                   value={sideEffects}
                   onChange={(e) => setSideEffects(e.target.value)}
                   rows={2}
@@ -542,10 +614,12 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="medical-notes" className="text-gray-700 text-[16px]">메모</Label>
+                <Label htmlFor="medical-notes" className="text-gray-700 text-[16px]">
+                  {language === 'ko' ? '메모' : 'Notes'}
+                </Label>
                 <Textarea
                   id="medical-notes"
-                  placeholder="주간 혈압 모니터링"
+                  placeholder={language === 'ko' ? '주간 혈압 모니터링' : 'Monitor blood pressure weekly'}
                   value={medicalNotes}
                   onChange={(e) => setMedicalNotes(e.target.value)}
                   rows={2}
@@ -566,16 +640,20 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-lg h-[85vh] p-0 gap-0 flex flex-col [&>button]:hidden">
-        <DialogTitle className="sr-only">새 약 추가</DialogTitle>
+        <DialogTitle className="sr-only">
+          {language === 'ko' ? '새 약 추가' : 'Add New Medication'}
+        </DialogTitle>
         <DialogDescription className="sr-only">
-          {STEPS[currentStep - 1].title} - 단계 {currentStep} / {STEPS.length}
+          {STEPS[currentStep - 1].title} - {language === 'ko' ? '단계' : 'Step'} {currentStep} / {STEPS.length}
         </DialogDescription>
         
         {/* Header with Progress */}
         <div className="flex-shrink-0 bg-gradient-to-r from-amber-400 to-orange-500 p-4 text-white">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-semibold">새 약 추가</h2>
+              <h2 className="text-[18px] font-semibold">
+                {language === 'ko' ? '새 약 추가' : 'Add New Medication'}
+              </h2>
             </div>
             <button
               onClick={onClose}
@@ -589,7 +667,9 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
           <div className="space-y-2">
             <Progress value={progressPercentage} className="h-2 bg-white/30" />
             <div className="flex items-center justify-between text-[12px]">
-              <span className="text-[16px]">단계 {currentStep} / {STEPS.length}</span>
+              <span className="text-[16px]">
+                {language === 'ko' ? '단계' : 'Step'} {currentStep} / {STEPS.length}
+              </span>
               <span className="text-[16px]">{STEPS[currentStep - 1].title}</span>
             </div>
           </div>
@@ -609,7 +689,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               className="flex-1 h-12 text-[16px] border-gray-300"
             >
               <ArrowLeft size={16} className="mr-2" />
-              이전
+              {language === 'ko' ? '이전' : 'Previous'}
             </Button>
           ) : (
             <div className="flex-1"></div>
@@ -620,7 +700,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               onClick={handleNext}
               className="flex-1 h-12 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white text-[16px]"
             >
-              다음
+              {language === 'ko' ? '다음' : 'Next'}
               <ArrowRight size={16} className="ml-2" />
             </Button>
           ) : (
@@ -629,7 +709,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
               className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-[16px]"
             >
               <Check size={16} className="mr-2" />
-              저장하기
+              {language === 'ko' ? '저장하기' : 'Save'}
             </Button>
           )}
         </div>

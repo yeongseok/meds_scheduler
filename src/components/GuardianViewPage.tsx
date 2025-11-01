@@ -8,17 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Label } from './ui/label';
+import { SharedHeader, CareRecipient } from './SharedHeader';
 
 export function GuardianViewPage() {
-  const [selectedPerson, setSelectedPerson] = useState('person1');
+  const [selectedView, setSelectedView] = useState('person1');
 
   // Mock data for people being cared for
-  const careRecipients = [
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
     {
       id: 'person1',
       name: '엄마 (Linda)',
       initials: 'LM',
-      color: 'bg-rose-400',
+      color: 'bg-orange-300',
       relation: '어머니',
       todayStatus: {
         total: 5,
@@ -28,13 +29,13 @@ export function GuardianViewPage() {
         upcoming: 2
       },
       healthScore: 75,
-      weeklyAdherence: 88
+      adherence: 88
     },
     {
       id: 'person2',
       name: '아빠 (Robert)',
       initials: 'RM',
-      color: 'bg-blue-400',
+      color: 'bg-amber-300',
       relation: '아버지',
       todayStatus: {
         total: 4,
@@ -44,11 +45,12 @@ export function GuardianViewPage() {
         upcoming: 1
       },
       healthScore: 92,
-      weeklyAdherence: 96
+      adherence: 96
     }
-  ];
+  ]);
 
-  const currentPerson = careRecipients.find(p => p.id === selectedPerson) || careRecipients[0];
+  const currentPerson = careRecipients.find(p => p.id === selectedView) || careRecipients[0];
+  const weeklyAdherence = currentPerson.adherence || 0;
 
   // Mock medicine schedule data
   const medicineSchedule = [
@@ -125,47 +127,15 @@ export function GuardianViewPage() {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-b from-emerald-50 to-teal-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white p-6 shadow-md">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl flex items-center space-x-2">
-              <Users size={28} />
-              <span>케어 대시보드</span>
-            </h1>
-            <p className="text-emerald-100 text-sm mt-1">복약 순응도 모니터링</p>
-          </div>
-          <Heart className="text-white/80" size={32} />
-        </div>
-
-        {/* Person Selector */}
-        <Card className="bg-white/95 backdrop-blur-sm p-4 border-0 shadow-md">
-          <Label className="text-gray-700 text-sm mb-2 block">보고 있는 사람</Label>
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-12 h-12">
-              <AvatarFallback className={`${currentPerson.color} text-white`}>
-                {currentPerson.initials}
-              </AvatarFallback>
-            </Avatar>
-            <Select value={selectedPerson} onValueChange={setSelectedPerson}>
-              <SelectTrigger className="flex-1 border-0 bg-gray-50">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {careRecipients.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium">{person.name}</span>
-                      <span className="text-xs text-gray-500">• {person.relation}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
-      </div>
+    <div className="h-full overflow-y-auto">
+      {/* Shared Header */}
+      <SharedHeader
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        careRecipients={careRecipients}
+        setCareRecipients={setCareRecipients}
+        showMe={false}
+      />
 
       <div className="p-4 space-y-4 -mt-2">
         {/* Quick Status Overview */}
@@ -272,10 +242,10 @@ export function GuardianViewPage() {
               <TrendingUp className="text-indigo-500" size={20} />
               <span>이번 주</span>
             </h3>
-            <span className="text-sm font-medium text-gray-600">{currentPerson.weeklyAdherence}% 순응도</span>
+            <span className="text-sm font-medium text-gray-600">{weeklyAdherence}% 순응도</span>
           </div>
           
-          <Progress value={currentPerson.weeklyAdherence} className="h-3 mb-3" />
+          <Progress value={weeklyAdherence} className="h-3 mb-3" />
           
           <div className="flex justify-between text-xs text-gray-500 mb-4">
             <span>월</span>

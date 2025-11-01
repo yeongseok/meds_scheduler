@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { Checkbox } from './ui/checkbox';
+import { useLanguage } from './LanguageContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +21,7 @@ interface SignUpPageProps {
 }
 
 export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
+  const { language } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -68,7 +70,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
           className="flex items-center gap-2 text-gray-600 hover:text-amber-600 mb-6 transition-colors"
         >
           <ArrowLeft size={20} />
-          <span>로그인으로 돌아가기</span>
+          <span>{language === 'ko' ? '로그인으로 돌아가기' : 'Back to Login'}</span>
         </button>
 
         {/* App Logo & Header */}
@@ -87,8 +89,10 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
             </div>
           </div>
           
-          <h1 className="mb-2">계정 만들기</h1>
-          <p className="text-gray-600">메디케어에 가입하여 약을 관리하세요</p>
+          <h1 className="mb-2">{language === 'ko' ? '계정 만들기' : 'Create Account'}</h1>
+          <p className="text-gray-600">
+            {language === 'ko' ? '메디케어에 가입하여 약을 관리하세요' : 'Join MediCare to manage your medications'}
+          </p>
         </div>
 
         {/* Sign Up Card */}
@@ -96,14 +100,14 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Input */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-700">이름</label>
+              <label className="text-sm text-gray-700">{language === 'ko' ? '이름' : 'Name'}</label>
               <div className="relative">
                 <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="홍길동"
+                  placeholder={language === 'ko' ? '홍길동' : 'John Doe'}
                   className="pl-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
                   required
                 />
@@ -112,7 +116,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
 
             {/* Email Input */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-700">이메일 주소</label>
+              <label className="text-sm text-gray-700">{language === 'ko' ? '이메일 주소' : 'Email Address'}</label>
               <div className="relative">
                 <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
@@ -128,14 +132,16 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
 
             {/* Phone Input */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-700">휴대전화 번호 (선택사항)</label>
+              <label className="text-sm text-gray-700">
+                {language === 'ko' ? '휴대전화 번호 (선택사항)' : 'Phone Number (Optional)'}
+              </label>
               <div className="relative">
                 <Smartphone size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="010-0000-0000"
+                  placeholder={language === 'ko' ? '010-0000-0000' : '+1 (555) 000-0000'}
                   className="pl-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
                 />
               </div>
@@ -143,14 +149,14 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-700">비밀번호</label>
+              <label className="text-sm text-gray-700">{language === 'ko' ? '비밀번호' : 'Password'}</label>
               <div className="relative">
                 <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="강력한 비밀번호를 만드세요"
+                  placeholder={language === 'ko' ? '강력한 비밀번호를 만드세요' : 'Create a strong password'}
                   className="pl-12 pr-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
                   required
                 />
@@ -166,14 +172,16 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
 
             {/* Confirm Password Input */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-700">비밀번호 확인</label>
+              <label className="text-sm text-gray-700">
+                {language === 'ko' ? '비밀번호 확인' : 'Confirm Password'}
+              </label>
               <div className="relative">
                 <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <Input
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="비밀번호를 다시 입력하세요"
+                  placeholder={language === 'ko' ? '비밀번호를 다시 입력하세요' : 'Re-enter your password'}
                   className="pl-12 pr-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
                   required
                 />
@@ -198,14 +206,29 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
                 htmlFor="terms"
                 className="text-sm text-gray-600 leading-relaxed cursor-pointer"
               >
-                <button type="button" className="text-amber-600 hover:underline">
-                  이용약관
-                </button>
-                {' '}및{' '}
-                <button type="button" className="text-amber-600 hover:underline">
-                  개인정보 처리방침
-                </button>
-                에 동의합니다
+                {language === 'ko' ? (
+                  <>
+                    <button type="button" className="text-amber-600 hover:underline">
+                      이용약관
+                    </button>
+                    {' '}및{' '}
+                    <button type="button" className="text-amber-600 hover:underline">
+                      개인정보 처리방침
+                    </button>
+                    에 동의합니다
+                  </>
+                ) : (
+                  <>
+                    I agree to the{' '}
+                    <button type="button" className="text-amber-600 hover:underline">
+                      Terms of Service
+                    </button>
+                    {' '}and{' '}
+                    <button type="button" className="text-amber-600 hover:underline">
+                      Privacy Policy
+                    </button>
+                  </>
+                )}
               </label>
             </div>
 
@@ -214,7 +237,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               type="submit"
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200 mt-6"
             >
-              계정 만들기
+              {language === 'ko' ? '계정 만들기' : 'Create Account'}
             </Button>
           </form>
         </Card>
@@ -222,12 +245,12 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
         {/* Already have account link */}
         <div className="text-center mb-6">
           <p className="text-gray-600">
-            이미 계정이 있으신가요?{' '}
+            {language === 'ko' ? '이미 계정이 있으신가요?' : 'Already have an account?'}{' '}
             <button
               onClick={onBackToLogin}
               className="text-amber-600 hover:text-amber-700 hover:underline"
             >
-              로그인하기
+              {language === 'ko' ? '로그인하기' : 'Sign In'}
             </button>
           </p>
         </div>
@@ -240,7 +263,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
             </div>
             <div className="relative flex justify-center">
               <span className="px-4 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 text-sm text-gray-500">
-                또는 다음으로 가입
+                {language === 'ko' ? '또는 다음으로 가입' : 'Or sign up with'}
               </span>
             </div>
           </div>
@@ -251,7 +274,9 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
                 <path d="M12 3C7.03 3 3 6.58 3 11c0 2.37 1.32 4.47 3.35 5.86-.14.58-.95 3.27-1.06 3.73-.13.54.19.53.4.38.16-.1 2.54-1.71 3.47-2.34.81.18 1.67.27 2.55.27 4.97 0 9-3.58 9-8s-4.03-8-9-8z" fill="#3C1E1E"/>
               </svg>
-              <span className="text-sm text-gray-800">카카오</span>
+              <span className="text-sm text-gray-800">
+                {language === 'ko' ? '카카오' : 'Kakao'}
+              </span>
             </button>
 
             {/* Google */}
@@ -274,19 +299,25 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-sm text-gray-700">구글</span>
+              <span className="text-sm text-gray-700">
+                {language === 'ko' ? '구글' : 'Google'}
+              </span>
             </button>
 
             {/* Email */}
             <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
               <Mail size={20} className="text-amber-600" />
-              <span className="text-sm text-gray-700">이메일</span>
+              <span className="text-sm text-gray-700">
+                {language === 'ko' ? '이메일' : 'Email'}
+              </span>
             </button>
 
             {/* Phone */}
             <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
               <Smartphone size={20} className="text-emerald-600" />
-              <span className="text-sm text-gray-700">전화번호</span>
+              <span className="text-sm text-gray-700">
+                {language === 'ko' ? '전화번호' : 'Phone'}
+              </span>
             </button>
           </div>
         </div>
@@ -322,10 +353,12 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               <AlertCircle size={32} className="text-white" />
             </div>
             <AlertDialogTitle className="text-center">
-              이용약관 동의 필요
+              {language === 'ko' ? '이용약관 동의 필요' : 'Terms Agreement Required'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              계정을 만들려면 이용약관에 동의해 주세요. 메디케어에 가입하기 전에 정책을 확인해 주시기 바랍니다.
+              {language === 'ko' 
+                ? '계정을 만들려면 이용약관에 동의해 주세요. 메디케어에 가입하기 전에 정책을 확인해 주시기 바랍니다.'
+                : 'Please agree to the terms and conditions to create an account. Review our policies before joining MediCare.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
@@ -333,7 +366,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               onClick={() => setShowTermsDialog(false)}
               className="w-full rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg"
             >
-              확인
+              {language === 'ko' ? '확인' : 'OK'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -347,10 +380,12 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               <AlertCircle size={32} className="text-white" />
             </div>
             <AlertDialogTitle className="text-center">
-              비밀번호가 일치하지 않습니다
+              {language === 'ko' ? '비밀번호가 일치하지 않습니다' : 'Passwords Do Not Match'}
             </AlertDialogTitle>
             <AlertDialogDescription className="text-center">
-              입력하신 비밀번호가 일치하지 않습니다. 두 비밀번호 필드에 동일한 비밀번호를 입력했는지 확인해 주세요.
+              {language === 'ko'
+                ? '입력하신 비밀번호가 일치하지 않습니다. 두 비밀번호 필드에 동일한 비밀번호를 입력했는지 확인해 주세요.'
+                : 'The passwords you entered do not match. Please make sure both password fields contain the same password.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:justify-center">
@@ -358,7 +393,7 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               onClick={() => setShowPasswordMismatchDialog(false)}
               className="w-full rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg"
             >
-              다시 시도
+              {language === 'ko' ? '다시 시도' : 'Try Again'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

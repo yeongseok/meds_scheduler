@@ -1,20 +1,31 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, Bell, Zap, Sun, Moon, Sunrise, Sunset, Pill, Repeat, AlertCircle, Edit2, Heart, Users } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Switch } from './ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Avatar, AvatarFallback } from './ui/avatar';
+import { useLanguage } from './LanguageContext';
+import { SharedHeader, CareRecipient } from './SharedHeader';
 
 interface SchedulePageProps {
   onEditMedicine?: (medicineId: string, medicineName: string) => void;
+  onNavigateToSettings?: () => void;
+  selectedView?: string;
+  setSelectedView?: (view: string) => void;
 }
 
-export function SchedulePage({ onEditMedicine }: SchedulePageProps = {}) {
+export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedView: propSelectedView, setSelectedView: propSetSelectedView }: SchedulePageProps = {}) {
+  const { t, language } = useLanguage();
   const [currentWeek, setCurrentWeek] = useState(0);
-  const [selectedView, setSelectedView] = useState('my-meds');
+  const [localSelectedView, setLocalSelectedView] = useState('my-meds');
+  
+  // Use props if provided, otherwise use local state
+  const selectedView = propSelectedView ?? localSelectedView;
+  const setSelectedView = propSetSelectedView ?? setLocalSelectedView;
+  const [selectedDateIndex, setSelectedDateIndex] = useState<number>(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1); // Monday=0
   const [reminderSettings, setReminderSettings] = useState({
     morningReminder: true,
     afternoonReminder: true,
@@ -23,22 +34,36 @@ export function SchedulePage({ onEditMedicine }: SchedulePageProps = {}) {
   });
 
   // Mock data for care recipients
-  const careRecipients = [
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
     {
       id: 'person1',
       name: 'Mom (Linda)',
       initials: 'LM',
       color: 'bg-orange-300',
-      relation: '어머니'
+      relation: 'Mother',
+      todayStatus: {
+        total: 5,
+        taken: 1,
+        overdue: 1,
+        pending: 1,
+        upcoming: 2
+      }
     },
     {
       id: 'person2',
       name: 'Dad (Robert)',
       initials: 'RM',
       color: 'bg-amber-400',
-      relation: '아버지'
+      relation: 'Father',
+      todayStatus: {
+        total: 4,
+        taken: 3,
+        overdue: 0,
+        pending: 0,
+        upcoming: 1
+      }
     }
-  ];
+  ]);
 
   // Mock schedule data with enhanced time periods (My medications)
   const myScheduleData = {
@@ -159,7 +184,9 @@ export function SchedulePage({ onEditMedicine }: SchedulePageProps = {}) {
 
   const scheduleData = selectedView === 'my-meds' ? myScheduleData : (careRecipientSchedules[selectedView] || myScheduleData);
 
-  const days = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'];
+  const days = language === 'ko' 
+    ? ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+    : ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const currentDate = new Date();
   const currentDayIndex = (currentDate.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
 
@@ -181,13 +208,13 @@ export function SchedulePage({ onEditMedicine }: SchedulePageProps = {}) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'taken':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs text-[14px]">✓ 완료</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs text-[14px]">✓ {language === 'ko' ? '완료' : 'Done'}</Badge>;
       case 'missed':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs text-[14px]">⚠️ 놓침</Badge>;
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs text-[14px]">⚠️ {language === 'ko' ? '놓침' : 'Missed'}</Badge>;
       case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse text-[14px]">🔔 복용 시간</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse text-[14px]">🔔 {language === 'ko' ? '복용 시간' : 'Time to take'}</Badge>;
       case 'upcoming':
-        return <Badge variant="outline" className="text-stone-600 border-stone-300 text-xs text-[14px]">⏰ 예정</Badge>;
+        return <Badge variant="outline" className="text-stone-600 border-stone-300 text-xs text-[14px]">⏰ {language === 'ko' ? '예정' : 'Upcoming'}</Badge>;
       default:
         return <Badge variant="outline" className="text-xs text-[14px]">?</Badge>;
     }
@@ -225,577 +252,358 @@ export function SchedulePage({ onEditMedicine }: SchedulePageProps = {}) {
 
   const formatDate = (dayIndex: number) => {
     const date = new Date();
-    const diff = dayIndex - currentDayIndex;
+    const diff = dayIndex - currentDayIndex + (currentWeek * 7);
     date.setDate(date.getDate() + diff);
     return date.getDate();
   };
 
+  const getWeekDayName = (dayIndex: number) => {
+    const date = new Date();
+    const diff = dayIndex - currentDayIndex + (currentWeek * 7);
+    date.setDate(date.getDate() + diff);
+    return language === 'ko' 
+      ? ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][date.getDay()]
+      : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+  };
+
+  const navigateToPreviousWeek = () => {
+    setCurrentWeek(prev => prev - 1);
+  };
+
+  const navigateToNextWeek = () => {
+    setCurrentWeek(prev => prev + 1);
+  };
+
+  const navigateToToday = () => {
+    setCurrentWeek(0);
+    setSelectedDateIndex(currentDayIndex);
+  };
+
+  const getCurrentWeekMonthYear = () => {
+    const date = new Date();
+    const diff = (currentWeek * 7);
+    date.setDate(date.getDate() + diff);
+    
+    const monthNames = language === 'ko'
+      ? ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월']
+      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+  };
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-amber-50 to-orange-50">
-      {/* Header with Gradient */}
-      <div className="gradient-info p-6 text-white relative overflow-hidden flex-shrink-0">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-12 -translate-x-12"></div>
-        
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="text-orange-100 text-lg text-[18px] font-bold">약 복용을 놓치지 마세요</p>
-            </div>
-          </div>
-          
-          {/* Week Summary */}
-          <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-2">
-                <h3 className="text-white font-medium text-[20px]">이번 주 요약</h3>
-              </div>
-              <Zap className="text-amber-200" size={20} />
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-amber-400 rounded-full"></div>
-                <span className="text-orange-100 text-[18px]">28회 복용</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-                <span className="text-orange-100 text-[18px]">2회 놓침</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-amber-300 rounded-full animate-pulse"></div>
-                <span className="text-orange-100 text-[18px]">18회 예정</span>
-              </div>
-            </div>
-            <p className="text-orange-100 text-sm mt-1 text-[16px]">
-              이번 주 순응도가 훌륭합니다! 🌟
-            </p>
-          </div>
-        </div>
-      </div>
+      <SharedHeader
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        careRecipients={careRecipients}
+        setCareRecipients={setCareRecipients}
+        onNavigateToSettings={onNavigateToSettings}
+      />
 
       {/* Scrollable Content Area */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-        {/* View Switcher */}
-        {careRecipients.length > 0 && (
-          <Card className="bg-white/95 backdrop-blur-sm p-3 border-0 shadow-md mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                {selectedView === 'my-meds' ? (
-                  <Heart className="text-white" size={18} />
-                ) : (
-                  <Users className="text-white" size={18} />
-                )}
-              </div>
-              <Select value={selectedView} onValueChange={setSelectedView}>
-                <SelectTrigger className="flex-1 border-0 bg-amber-50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="my-meds">
-                    <div className="flex items-center space-x-2">
-                      <Heart size={14} className="text-amber-500" />
-                      <span className="font-medium text-base">내 일정</span>
-                    </div>
-                  </SelectItem>
-                  {careRecipients.map((person) => (
-                    <SelectItem key={person.id} value={person.id}>
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="w-5 h-5">
-                          <AvatarFallback className={`${person.color} text-white text-xs`}>
-                            {person.initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">{person.name}</span>
-                        <span className="text-xs text-gray-500">• {person.relation}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </Card>
-        )}
 
         {/* Medication Plans */}
-        <Card className="medicine-card p-3 border-0 mb-4">
-          <h3 className="font-semibold text-gray-800 mb-3 flex items-center space-x-2">
-            <Calendar className="text-amber-600 flex-shrink-0" size={18} />
-            <span className="text-[18px] font-bold">복약 계획</span>
-          </h3>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-gray-800 flex items-center space-x-2">
+              <Calendar className="text-amber-600" size={22} />
+              <span className="text-xl font-bold text-[18px]">
+                {language === 'ko' ? '복약 계획' : 'Medication Plans'}
+              </span>
+            </h2>
+          </div>
 
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-4">
-              <TabsTrigger value="all" className="text-[16px]">전체</TabsTrigger>
-              <TabsTrigger value="daily" className="text-[16px]">관리</TabsTrigger>
-              <TabsTrigger value="weekly" className="text-[16px]">주간</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-gradient-to-r from-amber-50 to-orange-50 p-1 h-auto border border-amber-100">
+              <TabsTrigger 
+                value="all" 
+                className="text-[18px] font-semibold py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 transition-all duration-200"
+              >
+                {language === 'ko' ? '전체' : 'All'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="weekly" 
+                className="text-[18px] font-semibold py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 transition-all duration-200"
+              >
+                {language === 'ko' ? '주간' : 'Weekly'}
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="daily" className="space-y-3">
-              {/* Morning Plan */}
-              <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-3 border border-amber-100">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Sunrise className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 text-[16px]">아침 계획</p>
-                      <p className="text-xs text-gray-600 text-[14px]">오전 6:00 - 오후 12:00</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-amber-100 text-amber-700 border-amber-200 flex-shrink-0 text-[14px]">2알</Badge>
-                </div>
-                <div className="space-y-2 pl-12">
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-amber-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-amber-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Vitamin D</p>
-                        <p className="text-xs text-gray-500 text-[14px]">1000 IU • 오전 08:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 text-[14px]">
-                        <Repeat size={10} className="mr-1" />
-                        매일
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => onEditMedicine?.('1', 'Vitamin D')}
-                      >
-                        <Edit2 size={14} className="text-amber-600" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-amber-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-amber-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800">Omega-3</p>
-                        <p className="text-xs text-gray-500">1200mg • 오전 09:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300">
-                        <Repeat size={10} className="mr-1" />
-                        매일
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => onEditMedicine?.('2', 'Omega-3')}
-                      >
-                        <Edit2 size={14} className="text-amber-600" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Afternoon Plan */}
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-100">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Sun className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 text-[16px]">오후 계획</p>
-                      <p className="text-xs text-gray-600 text-[14px]">오후 12:00 - 오후 6:00</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-orange-100 text-orange-700 border-orange-200 flex-shrink-0 text-[14px]">3알</Badge>
-                </div>
-                <div className="space-y-2 pl-12">
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-orange-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Blood Pressure Med</p>
-                        <p className="text-xs text-gray-500 text-[14px]">10mg • 오후 12:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 whitespace-nowrap text-[14px]">
-                        <Repeat size={10} className="mr-1" />
-                        하루 2회
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => onEditMedicine?.('3', 'Blood Pressure Med')}
-                      >
-                        <Edit2 size={14} className="text-orange-600" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-orange-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Multivitamin</p>
-                        <p className="text-xs text-gray-500 text-[14px]">1정 • 오후 02:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 text-[14px]">
-                        <Repeat size={10} className="mr-1" />
-                        매일
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => console.log('Edit Multivitamin schedule')}
-                      >
-                        <Edit2 size={14} className="text-orange-600" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-orange-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Calcium</p>
-                        <p className="text-xs text-gray-500 text-[14px]">500mg • 오후 06:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 whitespace-nowrap text-[14px]">
-                        <Repeat size={10} className="mr-1" />
-                        하루 2회
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => console.log('Edit Calcium schedule')}
-                      >
-                        <Edit2 size={14} className="text-orange-600" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Evening Plan */}
-              <div className="bg-gradient-to-r from-orange-50 to-stone-50 rounded-xl p-3 border border-orange-100">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center space-x-2 min-w-0 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-400 to-stone-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Moon className="text-white" size={18} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-800 text-[16px]">저녁 계획</p>
-                      <p className="text-xs text-gray-600 text-[14px]">오후 6:00 - 오후 10:00</p>
-                    </div>
-                  </div>
-                  <Badge className="bg-orange-100 text-orange-700 border-orange-200 flex-shrink-0 text-[14px]">2알</Badge>
-                </div>
-                <div className="space-y-2 pl-12">
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-orange-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Blood Pressure Med</p>
-                        <p className="text-xs text-gray-500 text-[14px]">10mg • 오후 08:00</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-amber-700 border-amber-300 whitespace-nowrap text-[14px]">
-                        <Repeat size={10} className="mr-1" />
-                        하루 2회
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => console.log('Edit Blood Pressure Med schedule')}
-                      >
-                        <Edit2 size={14} className="text-orange-600" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 bg-white rounded-lg hover:bg-stone-50 transition-colors group">
-                    <div className="flex items-center space-x-2 min-w-0 flex-1">
-                      <Pill className="text-stone-500 flex-shrink-0" size={14} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Sleep Aid</p>
-                        <p className="text-xs text-gray-500 text-[14px]">5mg • 오후 09:30</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Badge variant="outline" className="text-xs text-stone-600 border-stone-300 whitespace-nowrap text-[14px]">
-                        <AlertCircle size={10} className="mr-1" />
-                        필요시
-                      </Badge>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-7 w-7 p-0"
-                        onClick={() => console.log('Edit Sleep Aid schedule')}
-                      >
-                        <Edit2 size={14} className="text-stone-600" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
             <TabsContent value="weekly" className="space-y-3">
-              <div className="bg-white rounded-xl p-3 border border-gray-200">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-gray-800 text-[18px]">주간 개요</p>
-                    <p className="text-xs text-gray-600 text-[16px]">총: 이번 주 49알</p>
-                  </div>
-                  <Badge className="bg-amber-100 text-amber-700 flex-shrink-0 text-[14px]">7일</Badge>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3 p-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg">
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <Pill className="text-amber-500 flex-shrink-0" size={16} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Vitamin D</p>
-                        <p className="text-xs text-gray-500 text-[14px]">매일 • 아침</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-gray-800 text-[16px]">7알</p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap text-[14px]">각 1000 IU</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 p-2 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg">
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <Pill className="text-orange-500 flex-shrink-0" size={16} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Blood Pressure Med</p>
-                        <p className="text-xs text-gray-500 text-[14px]">하루 2회</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-gray-800 text-[16px]">14알</p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap text-[14px]">각 10mg</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 p-2 bg-gradient-to-r from-stone-50 to-amber-50 rounded-lg">
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <Pill className="text-stone-600 flex-shrink-0" size={16} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">Calcium</p>
-                        <p className="text-xs text-gray-500 text-[14px]">하루 2회 • 식사</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-gray-800 text-[16px]">14알</p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap text-[14px]">각 500mg</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 p-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg">
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <Pill className="text-amber-600 flex-shrink-0" size={16} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">기타 약물</p>
-                        <p className="text-xs text-gray-500 text-[14px]">다양한 일정</p>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm font-semibold text-gray-800 text-[16px]">14알</p>
-                      <p className="text-xs text-gray-500 whitespace-nowrap text-[14px]">일정대로</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="all" className="space-y-2">
-              <div className="bg-white rounded-xl p-3 border border-gray-200">
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <p className="font-semibold text-gray-800 min-w-0 text-[18px]">모든 활성 계획</p>
-                  <Badge className="bg-gray-100 text-gray-700 flex-shrink-0 whitespace-nowrap text-[14px]">7가지 약물</Badge>
-                </div>
-                <div className="space-y-2">
-                  <div className="p-2 bg-gray-50 rounded-lg hover:bg-amber-50 transition-colors group">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center space-x-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Pill className="text-white" size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 text-[16px]">Vitamin D</p>
-                          <p className="text-xs text-gray-500 text-[14px]">1000 IU • 정제</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="outline" className="text-xs text-[14px]">매일</Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => onEditMedicine?.('1', 'Vitamin D')}
-                        >
-                          <Edit2 size={12} className="text-amber-600" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="pl-10 text-xs text-gray-600 text-[14px]">
-                      <Clock size={10} className="inline mr-1" />
-                      매일 오전 08:00
-                    </div>
-                  </div>
-
-                  <div className="p-2 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors group">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center space-x-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Pill className="text-white" size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 text-[16px]">Blood Pressure Med</p>
-                          <p className="text-xs text-gray-500 text-[14px]">10mg • 정제</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="outline" className="text-xs whitespace-nowrap text-[14px]">하루 2회</Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => onEditMedicine?.('3', 'Blood Pressure Med')}
-                        >
-                          <Edit2 size={12} className="text-orange-600" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="pl-10 text-xs text-gray-600 text-[14px]">
-                      <Clock size={10} className="inline mr-1" />
-                      매일 오후 12:00, 오후 08:00
-                    </div>
-                  </div>
-
-                  <div className="p-2 bg-gray-50 rounded-lg hover:bg-amber-50 transition-colors group">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center space-x-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Pill className="text-white" size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 text-[16px]">Calcium</p>
-                          <p className="text-xs text-gray-500 text-[14px]">500mg • 정제</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="outline" className="text-xs whitespace-nowrap text-[14px]">하루 2회</Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => onEditMedicine?.('4', 'Calcium')}
-                        >
-                          <Edit2 size={12} className="text-amber-600" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="pl-10 text-xs text-gray-600 text-[14px]">
-                      <Clock size={10} className="inline mr-1" />
-                      매일 오후 02:00, 오후 06:00
-                    </div>
-                  </div>
-
-                  <div className="p-2 bg-gray-50 rounded-lg hover:bg-stone-50 transition-colors group">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center space-x-2 min-w-0 flex-1">
-                        <div className="w-8 h-8 bg-gradient-to-br from-stone-400 to-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Pill className="text-white" size={14} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 text-[16px]">Sleep Aid</p>
-                          <p className="text-xs text-gray-500 text-[14px]">5mg • 정제</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant="outline" className="text-xs whitespace-nowrap text-[14px]">필요시</Badge>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-6 w-6 p-0"
-                          onClick={() => onEditMedicine?.('5', 'Sleep Aid')}
-                        >
-                          <Edit2 size={12} className="text-stone-600" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="pl-10 text-xs text-gray-600 text-[14px]">
-                      <Clock size={10} className="inline mr-1" />
-                      필요시 오후 09:30
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </Card>
-        </div>
-
-        {/* Schedule Grid */}
-        <div className="px-4">
-          <div className="space-y-4 pb-6">
-          {days.map((day, dayIndex) => (
-            <Card key={day} className={`medicine-card p-4 border-0 ${dayIndex === currentDayIndex ? 'ring-2 ring-blue-400 bg-gradient-to-r from-blue-50 to-purple-50' : ''}`}>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <h3 className={`font-semibold text-[20px] ${dayIndex === currentDayIndex ? 'text-blue-700' : 'text-gray-800'}`}>
-                    {day}
+              {/* Date Selector */}
+              <div className="bg-white rounded-xl p-3 border border-gray-200 mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-gray-800 text-[18px]">
+                    {language === 'ko' ? '날짜 선택' : 'Select Date'}
                   </h3>
-                  <span className="text-sm text-gray-500 text-[16px]">
-                    1월 {formatDate(dayIndex)}일
-                  </span>
-                  {dayIndex === currentDayIndex && (
-                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs text-[14px]">오늘</Badge>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={navigateToToday}
+                    className="h-7 px-3 text-[14px] bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-800"
+                  >
+                    {language === 'ko' ? '오늘' : 'Today'}
+                  </Button>
                 </div>
-                <div className="text-sm text-gray-600 text-[16px]">
-                  {scheduleData[day as keyof typeof scheduleData]?.length || 0}회 복용
+                
+                {/* Week Navigation */}
+                <div className="flex items-center justify-between mb-3 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={navigateToPreviousWeek}
+                    className="h-8 px-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300"
+                  >
+                    <ChevronLeft size={18} className="text-amber-600" />
+                  </Button>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={navigateToToday}
+                    className="h-8 text-[14px] font-semibold text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                  >
+                    {getCurrentWeekMonthYear()}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={navigateToNextWeek}
+                    className="h-8 px-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300"
+                  >
+                    <ChevronRight size={18} className="text-amber-600" />
+                  </Button>
+                </div>
+                
+                <div className="grid grid-cols-7 gap-2">
+                  {days.map((day, index) => {
+                    const dateNum = formatDate(index);
+                    const isToday = index === currentDayIndex && currentWeek === 0;
+                    const isSelected = index === selectedDateIndex;
+                    
+                    return (
+                      <motion.button
+                        key={`${day}-${index}-week${currentWeek}`}
+                        onClick={() => setSelectedDateIndex(index)}
+                        whileTap={{ scale: 0.95 }}
+                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+                          isSelected
+                            ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md'
+                            : isToday
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className={`text-[10px] mb-1 ${isSelected ? 'text-white' : 'text-gray-500'}`}>
+                          {language === 'ko' ? day.substring(0, 1) : day.substring(0, 3)}
+                        </span>
+                        <span className={`text-[16px] font-bold ${isSelected ? 'text-white' : 'text-gray-800'}`}>
+                          {dateNum}
+                        </span>
+                        {isToday && !isSelected && (
+                          <div className="w-1 h-1 bg-amber-500 rounded-full mt-1"></div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {scheduleData[day as keyof typeof scheduleData]?.map((dose, index) => (
-                  <div key={`${dose.id}-${index}`} className={`flex items-center justify-between p-3 bg-gradient-to-r ${getPeriodGradient(dose.period)} rounded-xl border border-white/50`}>
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2">
-                        {getPeriodIcon(dose.period)}
-                        <span className="text-sm font-semibold text-gray-700 text-[16px]">{dose.time}</span>
+              {/* Scheduled Pills for Selected Date */}
+              <div className="space-y-2">
+                {scheduleData[days[selectedDateIndex]].map((medicine, index) => (
+                  <div 
+                    key={`${medicine.id}-${medicine.time}-${index}`} 
+                    className={`flex items-center justify-between gap-3 p-3 rounded-lg bg-gradient-to-r ${getPeriodGradient(medicine.period)} border ${
+                      medicine.status === 'pending' 
+                        ? 'border-amber-300 ring-2 ring-amber-100' 
+                        : medicine.status === 'missed'
+                        ? 'border-orange-300'
+                        : 'border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className={`w-10 h-10 ${getStatusColor(medicine.status)} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        <Pill className="text-white" size={18} />
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800 text-[16px]">{dose.name}</p>
-                        <p className="text-xs text-gray-600 text-[14px]">{dose.dosage}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-gray-800 text-[16px]">{medicine.name}</p>
+                        <div className="flex items-center space-x-2 text-xs text-gray-600 text-[14px] mt-1">
+                          {getPeriodIcon(medicine.period)}
+                          <span>{medicine.time}</span>
+                          <span>•</span>
+                          <span>{medicine.dosage}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      {getStatusBadge(dose.status)}
-                      <div className={`w-4 h-4 rounded-full ${getStatusColor(dose.status)}`}></div>
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(medicine.status)}
                     </div>
                   </div>
                 ))}
-                
-                {(!scheduleData[day as keyof typeof scheduleData] || scheduleData[day as keyof typeof scheduleData].length === 0) && (
-                  <div className="text-center py-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl">
-                    <p className="text-sm text-gray-500 text-[16px]">예정된 약이 없습니다</p>
-                  </div>
-                )}
               </div>
-            </Card>
-          ))}
+            </TabsContent>
+
+            <TabsContent value="all" className="space-y-3">
+              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-amber-200 to-orange-300 rounded-2xl flex items-center justify-center">
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        Vitamin D
+                      </h3>
+                      <p className="text-base text-gray-600">
+                        1000 IU • {language === 'ko' ? '정제' : 'Tablet'}
+                      </p>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
+                          {language === 'ko' ? '매일' : 'Daily'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEditMedicine?.('1', 'Vitamin D')}
+                  >
+                    <Edit2 size={16} className="text-amber-600" />
+                  </Button>
+                </div>
+                <div className="mt-2 pl-[72px] text-sm text-gray-600">
+                  <Clock size={14} className="inline mr-1" />
+                  {language === 'ko' ? '매일 오전 08:00' : 'Daily at 08:00 AM'}
+                </div>
+              </Card>
+
+              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-orange-200 to-red-300 rounded-2xl flex items-center justify-center">
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        Blood Pressure Med
+                      </h3>
+                      <p className="text-base text-gray-600">
+                        10mg • {language === 'ko' ? '정제' : 'Tablet'}
+                      </p>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
+                          {language === 'ko' ? '하루 2회' : '2x daily'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEditMedicine?.('3', 'Blood Pressure Med')}
+                  >
+                    <Edit2 size={16} className="text-orange-600" />
+                  </Button>
+                </div>
+                <div className="mt-2 pl-[72px] text-sm text-gray-600">
+                  <Clock size={14} className="inline mr-1" />
+                  {language === 'ko' ? '매일 오후 12:00, 오후 08:00' : 'Daily at 12:00 PM, 08:00 PM'}
+                </div>
+              </Card>
+
+              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-amber-200 to-orange-300 rounded-2xl flex items-center justify-center">
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        Calcium
+                      </h3>
+                      <p className="text-base text-gray-600">
+                        500mg • {language === 'ko' ? '정제' : 'Tablet'}
+                      </p>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
+                          {language === 'ko' ? '하루 2회' : '2x daily'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEditMedicine?.('4', 'Calcium')}
+                  >
+                    <Edit2 size={16} className="text-amber-600" />
+                  </Button>
+                </div>
+                <div className="mt-2 pl-[72px] text-sm text-gray-600">
+                  <Clock size={14} className="inline mr-1" />
+                  {language === 'ko' ? '매일 오후 02:00, 오후 06:00' : 'Daily at 02:00 PM, 06:00 PM'}
+                </div>
+              </Card>
+
+              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 bg-gradient-to-r from-stone-300 to-amber-400 rounded-2xl flex items-center justify-center">
+                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">
+                        Sleep Aid
+                      </h3>
+                      <p className="text-base text-gray-600">
+                        5mg • {language === 'ko' ? '정제' : 'Tablet'}
+                      </p>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
+                          {language === 'ko' ? '필요시' : 'As needed'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEditMedicine?.('5', 'Sleep Aid')}
+                  >
+                    <Edit2 size={16} className="text-stone-600" />
+                  </Button>
+                </div>
+                <div className="mt-2 pl-[72px] text-sm text-gray-600">
+                  <Clock size={14} className="inline mr-1" />
+                  {language === 'ko' ? '필요시 오후 09:30' : 'As needed at 09:30 PM'}
+                </div>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

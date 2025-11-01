@@ -17,7 +17,10 @@ import { ProfilePage } from './components/ProfilePage';
 import { AdBanner } from './components/AdBanner';
 import { InAppAdvertise } from './components/InAppAdvertise';
 import { AddMedicineWizard } from './components/AddMedicineWizard';
+import { AlarmScreen } from './components/AlarmScreen';
 import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner@2.0.3';
+import { LanguageProvider, useLanguage } from './components/LanguageContext';
 
 type Page = 'splash' | 'login' | 'signup' | 'forgot-password' | 'home' | 'add' | 'edit' | 'list' | 'schedule' | 'settings' | 'detail' | 'guardians' | 'guardian-view' | 'profile';
 
@@ -33,12 +36,15 @@ export interface NewMedicine {
   asNeeded?: boolean;
 }
 
-export default function App() {
+function AppContent() {
+  const { t } = useLanguage();
   const [currentPage, setCurrentPage] = useState<Page>('splash');
   const [selectedMedicineId, setSelectedMedicineId] = useState<string | null>(null);
   const [selectedMedicineName, setSelectedMedicineName] = useState<string>('Vitamin D');
   const [newMedicine, setNewMedicine] = useState<NewMedicine | null>(null);
   const [isAddMedicineWizardOpen, setIsAddMedicineWizardOpen] = useState(false);
+  const [isAlarmVisible, setIsAlarmVisible] = useState(false);
+  const [selectedView, setSelectedView] = useState('my-meds'); // Shared state for profile switcher
 
   const handleSplashComplete = () => {
     setCurrentPage('login');
@@ -74,6 +80,25 @@ export default function App() {
     setIsAddMedicineWizardOpen(false);
   };
 
+  const handleAlarmTaken = () => {
+    setIsAlarmVisible(false);
+    toast.success(t('alarm.taken'), {
+      description: t('alarm.takenDesc')
+    });
+  };
+
+  const handleAlarmSnooze = () => {
+    setIsAlarmVisible(false);
+    toast.info(t('alarm.snoozed'), {
+      description: t('alarm.snoozedDesc')
+    });
+  };
+
+  const handleAlarmDismiss = () => {
+    setIsAlarmVisible(false);
+    toast(t('alarm.dismissed'));
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'splash':
@@ -85,17 +110,17 @@ export default function App() {
       case 'forgot-password':
         return <ForgotPasswordPage onBackToLogin={() => setCurrentPage('login')} />;
       case 'home':
-        return <HomePage onViewMedicine={handleViewMedicine} onNavigateToSettings={() => setCurrentPage('settings')} onNavigateToAddMedicine={() => setIsAddMedicineWizardOpen(true)} newMedicine={newMedicine} onClearNewMedicine={() => setNewMedicine(null)} />;
+        return <HomePage onViewMedicine={handleViewMedicine} onNavigateToSettings={() => setCurrentPage('settings')} onNavigateToAddMedicine={() => setIsAddMedicineWizardOpen(true)} newMedicine={newMedicine} onClearNewMedicine={() => setNewMedicine(null)} selectedView={selectedView} setSelectedView={setSelectedView} />;
       case 'add':
         return <AddMedicinePage onBack={() => setCurrentPage('home')} onAddMedicine={handleAddMedicine} />;
       case 'edit':
         return <EditMedicinePage medicineId={selectedMedicineId || undefined} medicineName={selectedMedicineName} onBack={() => setCurrentPage('schedule')} />;
       case 'list':
-        return <MedicineListPage onViewMedicine={handleViewMedicine} />;
+        return <MedicineListPage onViewMedicine={handleViewMedicine} onNavigateToSettings={() => setCurrentPage('settings')} selectedView={selectedView} setSelectedView={setSelectedView} />;
       case 'schedule':
-        return <SchedulePage onEditMedicine={handleEditMedicine} />;
+        return <SchedulePage onEditMedicine={handleEditMedicine} onNavigateToSettings={() => setCurrentPage('settings')} selectedView={selectedView} setSelectedView={setSelectedView} />;
       case 'settings':
-        return <SettingsPage onNavigateToProfile={() => setCurrentPage('profile')} onLogout={handleLogout} />;
+        return <SettingsPage onNavigateToProfile={() => setCurrentPage('profile')} onLogout={handleLogout} onTestAlarm={() => setIsAlarmVisible(true)} />;
       case 'profile':
         return <ProfilePage onBack={() => setCurrentPage('settings')} />;
       case 'detail':
@@ -149,7 +174,7 @@ export default function App() {
                 className={getNavItemStyle('home')}
               >
                 <Home size={18} />
-                <span className="text-xs mt-1 font-medium text-[16px]">홈</span>
+                <span className="text-xs mt-1 font-medium text-[16px]">{t('nav.home')}</span>
               </button>
               
               <button
@@ -157,7 +182,7 @@ export default function App() {
                 className={getNavItemStyle('schedule')}
               >
                 <Calendar size={18} />
-                <span className="text-xs mt-1 font-medium text-[16px]">일정</span>
+                <span className="text-xs mt-1 font-medium text-[16px]">{t('nav.schedule')}</span>
               </button>
               
               <button
@@ -167,7 +192,7 @@ export default function App() {
                 <div className="p-1 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400">
                   <Plus size={18} className="text-white" />
                 </div>
-                <span className="text-xs mt-1 font-medium text-[16px]">추가</span>
+                <span className="text-xs mt-1 font-medium text-[16px]">{t('nav.add')}</span>
               </button>
               
               <button
@@ -175,7 +200,7 @@ export default function App() {
                 className={getNavItemStyle('guardians')}
               >
                 <Users size={18} />
-                <span className="text-xs mt-1 font-medium text-[16px]">돌봄</span>
+                <span className="text-xs mt-1 font-medium text-[16px]">{t('nav.care')}</span>
               </button>
               
               <button
@@ -183,7 +208,7 @@ export default function App() {
                 className={getNavItemStyle('list')}
               >
                 <List size={18} />
-                <span className="text-xs mt-1 font-medium text-[16px]">기록</span>
+                <span className="text-xs mt-1 font-medium text-[16px]">{t('nav.history')}</span>
               </button>
             </div>
           </nav>
@@ -197,7 +222,31 @@ export default function App() {
         onAddMedicine={handleAddMedicine}
       />
 
+      {/* Alarm Screen */}
+      <AlarmScreen
+        isVisible={isAlarmVisible}
+        medicineName="Vitamin D"
+        dosage="1000 IU, 1정"
+        time="09:00"
+        medicineType="tablet"
+        onTaken={handleAlarmTaken}
+        onSnooze={handleAlarmSnooze}
+        onDismiss={handleAlarmDismiss}
+        onSettings={() => {
+          setIsAlarmVisible(false);
+          setCurrentPage('settings');
+        }}
+      />
+
       <Toaster position="top-center" richColors />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }
