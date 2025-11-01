@@ -514,45 +514,6 @@ export function HomePage({ onViewMedicine, onNavigateToSettings, onNavigateToAdd
         {/* Quick Actions - Only show for my own meds */}
 
 
-        {/* Weekly Progress */}
-        <Card className="medicine-card p-3 border-0">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-gray-800 flex items-center space-x-2">
-              <Activity className="text-amber-600" size={20} />
-              <span className="text-[18px] font-bold">{language === 'ko' ? '이번 주' : 'This Week'}</span>
-            </h3>
-            <span className="text-sm text-gray-500">92% {language === 'ko' ? '복용률' : 'Adherence'}</span>
-          </div>
-          
-          <div className="space-y-2">
-            <Progress value={92} className="h-3" />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>{language === 'ko' ? '월' : 'M'}</span>
-              <span>{language === 'ko' ? '화' : 'T'}</span>
-              <span>{language === 'ko' ? '수' : 'W'}</span>
-              <span>{language === 'ko' ? '목' : 'T'}</span>
-              <span>{language === 'ko' ? '금' : 'F'}</span>
-              <span>{language === 'ko' ? '토' : 'S'}</span>
-              <span>{language === 'ko' ? '일' : 'S'}</span>
-            </div>
-          </div>
-          
-          <div className="flex justify-between mt-4 text-sm">
-            <div className="text-center">
-              <div className="w-3 h-3 bg-amber-500 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">{language === 'ko' ? '28회 복용' : '28 Taken'}</span>
-            </div>
-            <div className="text-center">
-              <div className="w-3 h-3 bg-orange-500 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">{language === 'ko' ? '2회 누락' : '2 Missed'}</span>
-            </div>
-            <div className="text-center">
-              <div className="w-3 h-3 bg-stone-400 rounded-full mx-auto mb-1"></div>
-              <span className="text-gray-600">{language === 'ko' ? '5회 예정' : '5 Upcoming'}</span>
-            </div>
-          </div>
-        </Card>
-
         {/* Bottom spacing for navigation */}
         <div className="h-6"></div>
       </div>

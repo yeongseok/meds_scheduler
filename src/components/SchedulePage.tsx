@@ -291,6 +291,13 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
     return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
   };
 
+  const hasMissedDose = (dayIndex: number) => {
+    const dayName = days[dayIndex];
+    const daySchedule = scheduleData[dayName];
+    if (!daySchedule) return false;
+    return daySchedule.some(medicine => medicine.status === 'missed');
+  };
+
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-amber-50 to-orange-50">
       <SharedHeader
@@ -316,19 +323,19 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
             </h2>
           </div>
 
-          <Tabs defaultValue="all" className="w-full">
+          <Tabs defaultValue="weekly" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4 bg-gradient-to-r from-amber-50 to-orange-50 p-1 h-auto border border-amber-100">
-              <TabsTrigger 
-                value="all" 
-                className="text-[18px] font-semibold py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 transition-all duration-200"
-              >
-                {language === 'ko' ? '전체' : 'All'}
-              </TabsTrigger>
               <TabsTrigger 
                 value="weekly" 
                 className="text-[18px] font-semibold py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 transition-all duration-200"
               >
                 {language === 'ko' ? '주간' : 'Weekly'}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="all" 
+                className="text-[18px] font-semibold py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-gray-600 transition-all duration-200"
+              >
+                {language === 'ko' ? '전체' : 'All'}
               </TabsTrigger>
             </TabsList>
 
@@ -384,13 +391,14 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
                     const dateNum = formatDate(index);
                     const isToday = index === currentDayIndex && currentWeek === 0;
                     const isSelected = index === selectedDateIndex;
+                    const hasMissed = hasMissedDose(index);
                     
                     return (
                       <motion.button
                         key={`${day}-${index}-week${currentWeek}`}
                         onClick={() => setSelectedDateIndex(index)}
                         whileTap={{ scale: 0.95 }}
-                        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
                           isSelected
                             ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md'
                             : isToday
@@ -406,6 +414,9 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
                         </span>
                         {isToday && !isSelected && (
                           <div className="w-1 h-1 bg-amber-500 rounded-full mt-1"></div>
+                        )}
+                        {hasMissed && (
+                          <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full border border-white shadow-sm"></div>
                         )}
                       </motion.button>
                     );
