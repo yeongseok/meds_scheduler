@@ -20,7 +20,7 @@
 
 ## Firestore Database
 - [ ] Validate Firestore security rules listed in `src/lib/README.md` inside the Firebase console or emulator.
-- [ ] Gradually migrate mock medicine, guardian, and dose data to Firestore reads/writes, guarding existing behavior with feature flags or fallbacks.
+- [ ] Gradually migrate mock medicine, guardian, and dose data to Firestore reads/writes, guarding existing behavior with feature flags or fallbacks. *(HomePage now reads medicines from Firebase when available; guardian & dose flows still mock)*
 - [ ] Implement listener-based updates (`realtime: true`) only after verifying performance and accessibility implications.
 - [ ] Document any new collections or schema changes in `src/lib/types/index.ts` and update related hooks as needed.
 

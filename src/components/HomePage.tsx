@@ -7,6 +7,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './LanguageContext';
 import { SharedHeader, CareRecipient } from './SharedHeader';
 import { MedicineCard } from './MedicineCard';
+import { useAuth, useMedicines } from '../lib/hooks';
+import type { Medicine as FirebaseMedicine } from '../lib/types';
 
 interface NewMedicine {
   id: string;
@@ -208,6 +210,137 @@ const createCareRecipientMedicines = (language: string) => ({
   ]
 });
 
+const DEFAULT_MEDICINE_COLOR = 'from-sky-300 to-blue-500';
+const DEFAULT_MEDICINE_BG_COLOR = 'bg-sky-50';
+
+interface ParsedTime {
+  hour24: number;
+  minute: number;
+  minutePadded: string;
+  meridiem: 'AM' | 'PM' | null;
+  totalMinutes: number;
+}
+
+const parseTimeParts = (time: string | undefined): ParsedTime | null => {
+  if (!time) return null;
+
+  const match = time.trim().match(/(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i);
+  if (!match) return null;
+
+  const rawHour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const meridiem = match[3] ? match[3].toUpperCase() as 'AM' | 'PM' : null;
+
+  let hour24 = rawHour;
+  if (meridiem === 'PM' && rawHour < 12) {
+    hour24 = rawHour + 12;
+  } else if (meridiem === 'AM' && rawHour === 12) {
+    hour24 = 0;
+  }
+
+  return {
+    hour24,
+    minute,
+    minutePadded: match[2],
+    meridiem,
+    totalMinutes: hour24 * 60 + minute
+  };
+};
+
+const formatTimeForLanguage = (time: string | undefined, language: string) => {
+  if (!time) {
+    return language === 'ko' ? '시간 미정' : 'No time set';
+  }
+
+  const parsed = parseTimeParts(time);
+  if (!parsed) {
+    return time;
+  }
+
+  if (language === 'ko') {
+    return `${parsed.hour24.toString().padStart(2, '0')}:${parsed.minutePadded}`;
+  }
+
+  const hour12 = ((parsed.hour24 + 11) % 12) + 1;
+  const suffix = parsed.hour24 >= 12 ? 'PM' : 'AM';
+  return `${hour12}:${parsed.minutePadded} ${suffix}`;
+};
+
+const buildScheduleText = (times: string[] | undefined, language: string) => {
+  if (!times || times.length === 0) {
+    return language === 'ko'
+      ? '복용 시간이 아직 설정되지 않았어요'
+      : 'No schedule set yet';
+  }
+
+  const formattedTimes = times.map(time => formatTimeForLanguage(time, language));
+  if (language === 'ko') {
+    return `${formattedTimes.join(', ')} 복용`;
+  }
+  return `Take at ${formattedTimes.join(', ')}`;
+};
+
+const deriveStatusFromTimes = (times: string[] | undefined) => {
+  if (!times || times.length === 0) {
+    return 'upcoming';
+  }
+
+  const parsedTimes = times
+    .map(parseTimeParts)
+    .filter((parsed): parsed is ParsedTime => parsed !== null)
+    .sort((a, b) => a.totalMinutes - b.totalMinutes);
+
+  if (parsedTimes.length === 0) {
+    return 'pending';
+  }
+
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const upcoming = parsedTimes.find(time => time.totalMinutes >= nowMinutes);
+
+  if (!upcoming) {
+    const diff = nowMinutes - parsedTimes[parsedTimes.length - 1].totalMinutes;
+    return diff >= 60 ? 'overdue' : 'pending';
+  }
+
+  const diff = upcoming.totalMinutes - nowMinutes;
+  if (diff <= 30) {
+    return 'pending';
+  }
+
+  return 'upcoming';
+};
+
+const mapFirebaseMedicine = (medicine: FirebaseMedicine, language: string) => {
+  const status = deriveStatusFromTimes(medicine.times);
+  const formattedTime = formatTimeForLanguage(medicine.times?.[0], language);
+
+  const frequencyLabel = medicine.frequency
+    ? medicine.frequency
+    : language === 'ko'
+      ? '맞춤 일정'
+      : 'Custom schedule';
+
+  const schedule = buildScheduleText(medicine.times, language);
+
+  return {
+    id: medicine.id,
+    name: medicine.name,
+    dosage: medicine.dosage,
+    time: formattedTime,
+    status,
+    type: medicine.type || 'tablet',
+    color: DEFAULT_MEDICINE_COLOR,
+    bgColor: DEFAULT_MEDICINE_BG_COLOR,
+    frequency: frequencyLabel,
+    schedule,
+    asNeeded: Boolean(medicine.frequency && medicine.frequency.toLowerCase().includes('need'))
+  };
+};
+
+const mapFirebaseMedicines = (medicines: FirebaseMedicine[], language: string) =>
+  medicines.map(medicine => mapFirebaseMedicine(medicine, language));
+
 export function HomePage({ 
   onViewMedicine, 
   onNavigateToSettings, 
@@ -218,6 +351,12 @@ export function HomePage({
   setSelectedView 
 }: HomePageProps) {
   const { t, language } = useLanguage();
+  const { user } = useAuth();
+  const {
+    medicines: firebaseMedicines,
+    loading: firebaseMedicinesLoading,
+    error: firebaseMedicinesError
+  } = useMedicines(user?.uid, false);
   
   // State
   const [skippedMedicines, setSkippedMedicines] = useState<string[]>([]);
@@ -257,8 +396,39 @@ export function HomePage({
     }
   ]);
 
-  // Memoized mock data
-  const myMedicines = useMemo(() => createMyMedicines(language), [language]);
+  useEffect(() => {
+    if (firebaseMedicinesError) {
+      console.error('Failed to load medicines', firebaseMedicinesError);
+    }
+  }, [firebaseMedicinesError]);
+
+  // Memoized data sources
+  const fallbackMyMedicines = useMemo(() => createMyMedicines(language), [language]);
+  const firebaseHomeMedicines = useMemo(
+    () => mapFirebaseMedicines(firebaseMedicines, language),
+    [firebaseMedicines, language]
+  );
+  const myMedicines = useMemo(() => {
+    if (!user?.uid) {
+      return fallbackMyMedicines;
+    }
+
+    if (firebaseMedicinesLoading) {
+      return [];
+    }
+
+    if (firebaseMedicinesError) {
+      return [];
+    }
+
+    return firebaseHomeMedicines;
+  }, [
+    user?.uid,
+    firebaseMedicinesLoading,
+    firebaseMedicinesError,
+    firebaseHomeMedicines,
+    fallbackMyMedicines
+  ]);
   const careRecipientMedicines = useMemo(() => createCareRecipientMedicines(language), [language]);
 
   // Memoized computed values
