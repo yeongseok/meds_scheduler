@@ -128,7 +128,7 @@ function AppContent() {
       case 'guardians':
         return <GuardiansPage />;
       case 'guardian-view':
-        return <GuardianViewPage />;
+        return <GuardianViewPage onNavigateToSettings={() => setCurrentPage('settings')} />;
       default:
         return <HomePage onViewMedicine={handleViewMedicine} />;
     }

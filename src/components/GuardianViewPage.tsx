@@ -10,7 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Label } from './ui/label';
 import { SharedHeader, CareRecipient } from './SharedHeader';
 
-export function GuardianViewPage() {
+interface GuardianViewPageProps {
+  onNavigateToSettings?: () => void;
+}
+
+export function GuardianViewPage({ onNavigateToSettings }: GuardianViewPageProps) {
   const [selectedView, setSelectedView] = useState('person1');
 
   // Mock data for people being cared for
@@ -135,6 +139,7 @@ export function GuardianViewPage() {
         careRecipients={careRecipients}
         setCareRecipients={setCareRecipients}
         showMe={false}
+        onNavigateToSettings={onNavigateToSettings}
       />
 
       <div className="p-4 space-y-4 -mt-2">

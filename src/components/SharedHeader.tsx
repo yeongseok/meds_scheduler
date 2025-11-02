@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Settings, Plus, CheckCircle } from 'lucide-react';
+import { Settings, Plus, CheckCircle, HelpCircle, Activity, Bell, MessageCircle, Mail, Phone } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { ScrollArea } from './ui/scroll-area';
 import { toast } from 'sonner@2.0.3';
 import { motion } from 'motion/react';
 import { useLanguage } from './LanguageContext';
@@ -34,6 +36,7 @@ interface SharedHeaderProps {
   setCareRecipients: (recipients: CareRecipient[]) => void;
   onNavigateToSettings?: () => void;
   showMe?: boolean;
+  showInfoBanner?: boolean;
 }
 
 export function SharedHeader({ 
@@ -42,41 +45,63 @@ export function SharedHeader({
   careRecipients, 
   setCareRecipients,
   onNavigateToSettings,
-  showMe = true
+  showMe = true,
+  showInfoBanner = false
 }: SharedHeaderProps) {
   const { t, language } = useLanguage();
   const [showAddRecipientDialog, setShowAddRecipientDialog] = useState(false);
   const [newRecipientName, setNewRecipientName] = useState('');
   const [newRecipientEmail, setNewRecipientEmail] = useState('');
+  const [newRecipientPhone, setNewRecipientPhone] = useState('');
   const [newRecipientRelation, setNewRecipientRelation] = useState('');
+  const [inviteMethod, setInviteMethod] = useState('email');
   const [shareRecords, setShareRecords] = useState(true);
   const [shareMissedAlerts, setShareMissedAlerts] = useState(true);
 
-  // Function to invite a guardian
+  // Function to invite a care recipient
   const handleInviteGuardian = () => {
-    if (!newRecipientName.trim() || !newRecipientEmail.trim() || !newRecipientRelation.trim()) {
+    if (!newRecipientName.trim() || !newRecipientRelation.trim()) {
       toast.error(language === 'ko' ? '모든 필드를 입력해주세요' : 'Please fill in all fields');
       return;
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newRecipientEmail)) {
-      toast.error(language === 'ko' ? '유효한 이메일 주소를 입력해주세요' : 'Please enter a valid email address');
-      return;
+    // Validate based on invitation method
+    if (inviteMethod === 'phone') {
+      if (!newRecipientPhone.trim()) {
+        toast.error(language === 'ko' ? '전화번호를 입력해주세요' : 'Please enter phone number');
+        return;
+      }
+    } else if (inviteMethod === 'email' || inviteMethod === 'gmail') {
+      if (!newRecipientEmail.trim()) {
+        toast.error(language === 'ko' ? '이메일 주소를 입력해주세요' : 'Please enter email address');
+        return;
+      }
+      // Validate email format for email/gmail
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newRecipientEmail)) {
+        toast.error(language === 'ko' ? '유효한 이메일 주소를 입력해주세요' : 'Please enter a valid email address');
+        return;
+      }
     }
 
-    // In a real app, this would send an invitation via email/SMS
+    // In a real app, this would send an invitation via the selected method
+    const methodName = inviteMethod === 'kakaotalk' ? (language === 'ko' ? '카카오톡' : 'KakaoTalk')
+      : inviteMethod === 'gmail' ? (language === 'ko' ? '지메일' : 'Gmail')
+      : inviteMethod === 'email' ? (language === 'ko' ? '이메일' : 'Email')
+      : (language === 'ko' ? '문자' : 'SMS');
+
     toast.success(
       language === 'ko' 
-        ? `${newRecipientEmail}로 보호자 초대를 보냈습니다` 
-        : `Guardian invitation sent to ${newRecipientEmail}`
+        ? `${methodName}으로 ${newRecipientName}님에게 보호 대상자 초대를 보냈습니다` 
+        : `Care recipient invitation sent to ${newRecipientName} via ${methodName}`
     );
     
     // Reset form
     setNewRecipientName('');
     setNewRecipientEmail('');
+    setNewRecipientPhone('');
     setNewRecipientRelation('');
+    setInviteMethod('email');
     setShareRecords(true);
     setShareMissedAlerts(true);
     setShowAddRecipientDialog(false);
@@ -87,22 +112,43 @@ export function SharedHeader({
       {/* Floating Island Header */}
       <div className="p-4 flex-shrink-0">
         <div className="gradient-primary rounded-3xl shadow-lg text-white relative overflow-hidden px-5 py-4">
-          {/* Top Row: Date and Settings */}
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-white text-[15px]">{t('home.date')}</p>
+          {/* Info Banner (for Care Circle page) */}
+          {showInfoBanner && (
+            <div className="mb-3 bg-white/10 backdrop-blur-sm rounded-2xl p-3 border border-white/20">
+              <div className="flex items-start gap-2">
+                <HelpCircle size={20} className="text-white flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-white mb-1 text-[16px]">
+                    {language === 'ko' ? '케어 서클이란?' : 'What is Care Circle?'}
+                  </h3>
+                  <p className="text-white/90 text-[14px] leading-relaxed">
+                    {language === 'ko' 
+                      ? '가족, 간병인 또는 의료 제공자를 초대하여 복약 일정과 기록을 확인할 수 있습니다. 복용을 놓치면 담당자에게 알림 받을 수 있습니다.'
+                      : 'Invite family, caregivers or healthcare providers to monitor medication schedule and records. Get alerts when doses are missed.'}
+                  </p>
+                </div>
+              </div>
             </div>
-            {onNavigateToSettings && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8 bg-white/20 hover:bg-white/30 border-0 rounded-full"
-                onClick={onNavigateToSettings}
-              >
-                <Settings size={18} className="text-white" />
-              </Button>
-            )}
-          </div>
+          )}
+
+          {/* Top Row: Date and Settings */}
+          {!showInfoBanner && (
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-white text-[15px]">{t('home.date')}</p>
+              </div>
+              {onNavigateToSettings && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 bg-white/20 hover:bg-white/30 border-0 rounded-full"
+                  onClick={onNavigateToSettings}
+                >
+                  <Settings size={18} className="text-white" />
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* Profile Switcher Row */}
           <div className="flex items-center gap-3 overflow-x-auto">
@@ -200,7 +246,7 @@ export function SharedHeader({
 
       {/* Add Care Recipient Dialog */}
       <Dialog open={showAddRecipientDialog} onOpenChange={setShowAddRecipientDialog}>
-        <DialogContent className="max-w-[90%] rounded-2xl">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-[20px]">
               {language === 'ko' ? '보호 대상자 추가' : 'Add Care Recipient'}
@@ -211,6 +257,8 @@ export function SharedHeader({
                 : 'Enter the details of the person you want to help with medication.'}
             </DialogDescription>
           </DialogHeader>
+          
+          <ScrollArea className="max-h-[60vh] pr-4">
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="recipientName" className="text-[16px]">
@@ -224,19 +272,78 @@ export function SharedHeader({
                 className="text-[16px]"
               />
             </div>
+
+            {/* Invitation Method Selection */}
             <div className="space-y-2">
-              <Label htmlFor="recipientEmail" className="text-[16px]">
-                {language === 'ko' ? '이메일' : 'Email'}
+              <Label className="text-[16px]">
+                {language === 'ko' ? '초대 방법' : 'Invitation Method'}
               </Label>
-              <Input
-                id="recipientEmail"
-                type="email"
-                placeholder={language === 'ko' ? '예: mom@example.com' : 'e.g., mom@example.com'}
-                value={newRecipientEmail}
-                onChange={(e) => setNewRecipientEmail(e.target.value)}
-                className="text-[16px]"
-              />
+              <RadioGroup value={inviteMethod} onValueChange={setInviteMethod} className="gap-2">
+                <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                  <RadioGroupItem value="kakaotalk" id="recipient-kakaotalk" />
+                  <Label htmlFor="recipient-kakaotalk" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                    <MessageCircle size={20} className="text-yellow-500" />
+                    <span>{language === 'ko' ? '카카오톡' : 'KakaoTalk'}</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                  <RadioGroupItem value="gmail" id="recipient-gmail" />
+                  <Label htmlFor="recipient-gmail" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                    <Mail size={20} className="text-red-500" />
+                    <span>{language === 'ko' ? '구글 이메일' : 'Gmail'}</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                  <RadioGroupItem value="email" id="recipient-email" />
+                  <Label htmlFor="recipient-email" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                    <Mail size={20} className="text-blue-500" />
+                    <span>{language === 'ko' ? '이메일' : 'Email'}</span>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                  <RadioGroupItem value="phone" id="recipient-phone" />
+                  <Label htmlFor="recipient-phone" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                    <Phone size={20} className="text-green-500" />
+                    <span>{language === 'ko' ? '전화번호' : 'Phone Number'}</span>
+                  </Label>
+                </div>
+              </RadioGroup>
             </div>
+
+            {/* Email Input - shown for email/gmail methods */}
+            {(inviteMethod === 'email' || inviteMethod === 'gmail') && (
+              <div className="space-y-2">
+                <Label htmlFor="recipientEmail" className="text-[16px]">
+                  {language === 'ko' ? '이메일 주소' : 'Email Address'}
+                </Label>
+                <Input
+                  id="recipientEmail"
+                  type="email"
+                  placeholder="recipient@email.com"
+                  value={newRecipientEmail}
+                  onChange={(e) => setNewRecipientEmail(e.target.value)}
+                  className="text-[16px]"
+                />
+              </div>
+            )}
+
+            {/* Phone Input - shown for phone method */}
+            {inviteMethod === 'phone' && (
+              <div className="space-y-2">
+                <Label htmlFor="recipientPhone" className="text-[16px]">
+                  {language === 'ko' ? '전화번호' : 'Phone Number'}
+                </Label>
+                <Input
+                  id="recipientPhone"
+                  type="tel"
+                  placeholder={language === 'ko' ? '010-1234-5678' : '010-1234-5678'}
+                  value={newRecipientPhone}
+                  onChange={(e) => setNewRecipientPhone(e.target.value)}
+                  className="text-[16px]"
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="recipientRelation" className="text-[16px]">
                 {language === 'ko' ? '관계' : 'Relationship'}
@@ -249,30 +356,57 @@ export function SharedHeader({
                 className="text-[16px]"
               />
             </div>
-            <div className="space-y-3 pt-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="shareRecords" className="text-[16px]">
-                  {language === 'ko' ? '복용 기록 공유' : 'Share medication records'}
-                </Label>
-                <Switch
-                  id="shareRecords"
-                  checked={shareRecords}
-                  onCheckedChange={setShareRecords}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="shareMissedAlerts" className="text-[16px]">
-                  {language === 'ko' ? '미복용 알림 공유' : 'Share missed alerts'}
-                </Label>
-                <Switch
-                  id="shareMissedAlerts"
-                  checked={shareMissedAlerts}
-                  onCheckedChange={setShareMissedAlerts}
-                />
+            <div className="space-y-2 pt-2">
+              <Label className="text-[16px]">
+                {language === 'ko' ? '요청 권한' : 'Requested Permissions'}
+              </Label>
+              
+              <div className="space-y-3">
+                {/* Share Records Toggle */}
+                <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="flex items-start gap-3">
+                    <Activity size={20} className="text-amber-600 mt-1" />
+                    <div>
+                      <div className="text-[16px]">
+                        {language === 'ko' ? '복용 기록 공유' : 'Share Records'}
+                      </div>
+                      <div className="text-[14px] text-gray-500">
+                        {language === 'ko' ? '과거 복약 기록' : 'Past medication records'}
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    id="shareRecords"
+                    checked={shareRecords}
+                    onCheckedChange={setShareRecords}
+                  />
+                </div>
+
+                {/* Missed Dose Alert Toggle */}
+                <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
+                  <div className="flex items-start gap-3">
+                    <Bell size={20} className="text-amber-600 mt-1" />
+                    <div>
+                      <div className="text-[16px]">
+                        {language === 'ko' ? '미복용 알림 공유' : 'Share missed alerts'}
+                      </div>
+                      <div className="text-[14px] text-gray-500">
+                        {language === 'ko' ? '알림 보내기 알림' : 'Send alert notifications'}
+                      </div>
+                    </div>
+                  </div>
+                  <Switch
+                    id="shareMissedAlerts"
+                    checked={shareMissedAlerts}
+                    onCheckedChange={setShareMissedAlerts}
+                  />
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          </ScrollArea>
+
+          <div className="flex gap-2 mt-4">
             <Button
               variant="outline"
               onClick={() => setShowAddRecipientDialog(false)}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, Shield, Users, Mail, Check, X, Eye, Share2, Bell, Activity } from 'lucide-react';
+import { UserPlus, Shield, Users, Mail, Check, X, Eye, Share2, Bell, Activity, MessageCircle, Phone } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -11,6 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Separator } from './ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { ScrollArea } from './ui/scroll-area';
 import { toast } from 'sonner@2.0.3';
 import { useLanguage } from './LanguageContext';
 
@@ -20,6 +22,8 @@ export function GuardiansPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
   const [inviteRelationship, setInviteRelationship] = useState('');
+  const [inviteMethod, setInviteMethod] = useState('email');
+  const [invitePhone, setInvitePhone] = useState('');
   const [shareHistory, setShareHistory] = useState(true);
   const [shareReminders, setShareReminders] = useState(true);
   
@@ -108,24 +112,8 @@ export function GuardiansPage() {
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-amber-50 to-orange-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-white p-6 shadow-md">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[20px] font-bold">
-              {language === 'ko' ? '케어 서클' : 'Care Circle'}
-            </h1>
-            <p className="text-amber-100 text-[18px]">
-              {language === 'ko' ? '다른 이들을 함께 관유하세요' : 'Care together with others'}
-            </p>
-          </div>
-          <Shield className="text-white/80" size={32} />
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* Info Card */}
+      {/* Header - Info Card */}
+      <div className="p-4 flex-shrink-0">
         <Card className="p-4 bg-white border-0 shadow-sm">
           <div className="flex items-start space-x-3">
             <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
@@ -143,6 +131,10 @@ export function GuardiansPage() {
             </div>
           </div>
         </Card>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
 
         {/* Invite Guardian Button */}
         <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
@@ -152,7 +144,7 @@ export function GuardiansPage() {
               {language === 'ko' ? '케어 서클에 초대' : 'Invite to Care Circle'}
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-white">
+          <DialogContent className="bg-white max-w-md">
             <DialogHeader>
               <DialogTitle className="text-[20px]">
                 {language === 'ko' ? '보호자 초대' : 'Invite Guardian'}
@@ -164,6 +156,7 @@ export function GuardiansPage() {
               </DialogDescription>
             </DialogHeader>
             
+            <ScrollArea className="max-h-[60vh] pr-4">
             <div className="space-y-5 py-4">
               {/* Name Input */}
               <div className="space-y-2">
@@ -179,20 +172,76 @@ export function GuardiansPage() {
                 />
               </div>
 
-              {/* Email Input */}
+              {/* Invitation Method Selection */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[16px]">
-                  {language === 'ko' ? '이메일 주소' : 'Email Address'}
+                <Label className="text-[16px]">
+                  {language === 'ko' ? '초대 방법' : 'Invitation Method'}
                 </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="guardian@email.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="text-[16px]"
-                />
+                <RadioGroup value={inviteMethod} onValueChange={setInviteMethod} className="gap-2">
+                  <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                    <RadioGroupItem value="kakaotalk" id="kakaotalk" />
+                    <Label htmlFor="kakaotalk" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                      <MessageCircle size={20} className="text-yellow-500" />
+                      <span>{language === 'ko' ? '카카오톡' : 'KakaoTalk'}</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                    <RadioGroupItem value="gmail" id="gmail" />
+                    <Label htmlFor="gmail" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                      <Mail size={20} className="text-red-500" />
+                      <span>{language === 'ko' ? '구글 이메일' : 'Gmail'}</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                    <RadioGroupItem value="email" id="email" />
+                    <Label htmlFor="email" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                      <Mail size={20} className="text-blue-500" />
+                      <span>{language === 'ko' ? '이메일' : 'Email'}</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-3 py-3 px-4 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer hover:bg-gray-100">
+                    <RadioGroupItem value="phone" id="phone" />
+                    <Label htmlFor="phone" className="flex items-center gap-2 cursor-pointer text-[16px] flex-1">
+                      <Phone size={20} className="text-green-500" />
+                      <span>{language === 'ko' ? '전화번호' : 'Phone Number'}</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
+
+              {/* Email Input - shown for email/gmail methods */}
+              {(inviteMethod === 'email' || inviteMethod === 'gmail') && (
+                <div className="space-y-2">
+                  <Label htmlFor="contact" className="text-[16px]">
+                    {language === 'ko' ? '이메일 주소' : 'Email Address'}
+                  </Label>
+                  <Input
+                    id="contact"
+                    type="email"
+                    placeholder="guardian@email.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="text-[16px]"
+                  />
+                </div>
+              )}
+
+              {/* Phone Input - shown for phone method */}
+              {inviteMethod === 'phone' && (
+                <div className="space-y-2">
+                  <Label htmlFor="phoneNumber" className="text-[16px]">
+                    {language === 'ko' ? '전화번호' : 'Phone Number'}
+                  </Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder={language === 'ko' ? '010-1234-5678' : '010-1234-5678'}
+                    value={invitePhone}
+                    onChange={(e) => setInvitePhone(e.target.value)}
+                    className="text-[16px]"
+                  />
+                </div>
+              )}
 
               {/* Relation Input */}
               <div className="space-y-2">
@@ -230,52 +279,55 @@ export function GuardiansPage() {
               </div>
 
               {/* Sharing Permissions */}
-              <div className="space-y-4 pt-2">
+              <div className="space-y-2 pt-2">
                 <Label className="text-[16px]">
-                  {language === 'ko' ? '공유 권한' : 'Sharing Permissions'}
+                  {language === 'ko' ? '부여 권한' : 'Requested Permissions'}
                 </Label>
                 
-                {/* Share Records Toggle */}
-                <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="flex items-start gap-3">
-                    <Activity size={20} className="text-amber-600 mt-1" />
-                    <div>
-                      <div className="text-[16px]">
-                        {language === 'ko' ? '기록 공유' : 'Share Records'}
-                      </div>
-                      <div className="text-[14px] text-gray-500">
-                        {language === 'ko' ? '과거 복약 기록' : 'Past medication records'}
+                <div className="space-y-3">
+                  {/* Share Records Toggle */}
+                  <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="flex items-start gap-3">
+                      <Activity size={20} className="text-amber-600 mt-1" />
+                      <div>
+                        <div className="text-[16px]">
+                          {language === 'ko' ? '복용 기록 공유' : 'Share Records'}
+                        </div>
+                        <div className="text-[14px] text-gray-500">
+                          {language === 'ko' ? '과거 복약 기록' : 'Past medication records'}
+                        </div>
                       </div>
                     </div>
+                    <Switch
+                      checked={shareHistory}
+                      onCheckedChange={setShareHistory}
+                    />
                   </div>
-                  <Switch
-                    checked={shareHistory}
-                    onCheckedChange={setShareHistory}
-                  />
-                </div>
 
-                {/* Missed Dose Alert Toggle */}
-                <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
-                  <div className="flex items-start gap-3">
-                    <Bell size={20} className="text-amber-600 mt-1" />
-                    <div>
-                      <div className="text-[16px]">
-                        {language === 'ko' ? '미복용 알림' : 'Missed Dose Alert'}
-                      </div>
-                      <div className="text-[14px] text-gray-500">
-                        {language === 'ko' ? '알림 보내기 알림' : 'Send alert notifications'}
+                  {/* Missed Dose Alert Toggle */}
+                  <div className="flex items-center justify-between py-3 px-4 rounded-lg border border-gray-200 bg-gray-50">
+                    <div className="flex items-start gap-3">
+                      <Bell size={20} className="text-amber-600 mt-1" />
+                      <div>
+                        <div className="text-[16px]">
+                          {language === 'ko' ? '미복용 알림 공유' : 'Missed Dose Alert'}
+                        </div>
+                        <div className="text-[14px] text-gray-500">
+                          {language === 'ko' ? '알림 보내기 알림' : 'Send alert notifications'}
+                        </div>
                       </div>
                     </div>
+                    <Switch
+                      checked={shareReminders}
+                      onCheckedChange={setShareReminders}
+                    />
                   </div>
-                  <Switch
-                    checked={shareReminders}
-                    onCheckedChange={setShareReminders}
-                  />
                 </div>
               </div>
             </div>
+            </ScrollArea>
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-4">
               <Button
                 variant="outline"
                 onClick={() => setInviteDialogOpen(false)}
@@ -286,29 +338,52 @@ export function GuardiansPage() {
               <Button
                 onClick={() => {
                   // Validation
-                  if (!inviteName.trim() || !inviteEmail.trim() || !inviteRelationship.trim()) {
+                  if (!inviteName.trim() || !inviteRelationship.trim()) {
                     toast.error(language === 'ko' ? '모든 필드를 입력해주세요' : 'Please fill in all fields');
                     return;
                   }
 
-                  // Validate email format
-                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                  if (!emailRegex.test(inviteEmail)) {
-                    toast.error(language === 'ko' ? '유효한 이메일 주소를 입력해주세요' : 'Please enter a valid email address');
-                    return;
+                  // Validate based on invitation method
+                  if (inviteMethod === 'phone') {
+                    if (!invitePhone.trim()) {
+                      toast.error(language === 'ko' ? '전화번호를 입력해주세요' : 'Please enter phone number');
+                      return;
+                    }
+                  } else if (inviteMethod === 'email' || inviteMethod === 'gmail') {
+                    if (!inviteEmail.trim()) {
+                      toast.error(language === 'ko' ? '이메일 주소를 입력해주세요' : 'Please enter email address');
+                      return;
+                    }
+                    // Validate email format for email/gmail
+                    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                    if (!emailRegex.test(inviteEmail)) {
+                      toast.error(language === 'ko' ? '유효한 이메일 주소를 입력해주세요' : 'Please enter a valid email address');
+                      return;
+                    }
                   }
 
-                  // In a real app, this would send an invitation via email/SMS
+                  // In a real app, this would send an invitation via the selected method
+                  const methodName = inviteMethod === 'kakaotalk' ? (language === 'ko' ? '카카오톡' : 'KakaoTalk')
+                    : inviteMethod === 'gmail' ? (language === 'ko' ? '지메일' : 'Gmail')
+                    : inviteMethod === 'email' ? (language === 'ko' ? '이메일' : 'Email')
+                    : (language === 'ko' ? '문자' : 'SMS');
+
+                  const contactInfo = inviteMethod === 'phone' ? invitePhone 
+                    : (inviteMethod === 'email' || inviteMethod === 'gmail') ? inviteEmail 
+                    : inviteName;
+
                   toast.success(
                     language === 'ko' 
-                      ? `${inviteEmail}로 보호자 초대를 보냈습니다` 
-                      : `Guardian invitation sent to ${inviteEmail}`
+                      ? `${methodName}으로 ${inviteName}님에게 보호자 초대를 보냈습니다` 
+                      : `Guardian invitation sent to ${inviteName} via ${methodName}`
                   );
                   
                   // Reset form
                   setInviteName('');
                   setInviteEmail('');
+                  setInvitePhone('');
                   setInviteRelationship('');
+                  setInviteMethod('email');
                   setShareHistory(true);
                   setShareReminders(true);
                   setInviteDialogOpen(false);

@@ -420,7 +420,7 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
                           <div className="w-1 h-1 bg-amber-500 rounded-full mt-1"></div>
                         )}
                         {hasMissed && (
-                          <div className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full border border-white shadow-sm"></div>
+                          <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 rounded-full border border-white shadow-md animate-pulse"></div>
                         )}
                       </motion.button>
                     );
@@ -503,7 +503,7 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
                     <Edit2 size={16} className="text-amber-600" />
                   </Button>
                 </div>
-                <div className="mt-2 pl-[72px] text-sm text-gray-600">
+                <div className="m-[0px] pl-[72px] text-sm text-gray-600">
                   <Clock size={14} className="inline mr-1" />
                   {language === 'ko' ? '매일 오전 08:00' : 'Daily at 08:00 AM'}
                 </div>

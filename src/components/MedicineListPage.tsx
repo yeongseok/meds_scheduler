@@ -414,7 +414,7 @@ export function MedicineListPage({ onViewMedicine, onNavigateToSettings, selecte
           <div className="space-y-4">
             {filteredMedicines.map((medicine) => (
               <Card key={medicine.id} className="medicine-card p-5 border-0 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between m-[0px]">
                   <div className="flex items-start space-x-4 flex-1">
                     {/* Medicine Icon */}
                     <div className={`w-16 h-16 bg-gradient-to-r ${medicine.color} rounded-2xl flex items-center justify-center relative`}>
