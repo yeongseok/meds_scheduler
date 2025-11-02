@@ -138,10 +138,15 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
 
         {/* Reset Card */}
         <Card className="bg-white/80 backdrop-blur-lg border-none shadow-2xl p-6 rounded-3xl">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'phone')}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab((value as 'email' | 'phone') === 'phone' ? 'email' : (value as 'email' | 'phone'))}
+          >
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="email">{language === 'ko' ? '이메일' : 'Email'}</TabsTrigger>
-              <TabsTrigger value="phone">{language === 'ko' ? '휴대폰' : 'Phone'}</TabsTrigger>
+              <TabsTrigger value="phone" disabled>
+                {language === 'ko' ? '휴대폰 (준비 중)' : 'Phone (Coming Soon)'}
+              </TabsTrigger>
             </TabsList>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -166,22 +171,13 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
               </TabsContent>
 
               <TabsContent value="phone" className="space-y-5 mt-0">
-                {/* Phone Input */}
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-700">
-                    {language === 'ko' ? '휴대폰 번호' : 'Phone Number'}
-                  </label>
-                  <div className="relative">
-                    <Smartphone size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <Input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={language === 'ko' ? '010-0000-0000' : '+1 (555) 000-0000'}
-                      className="pl-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
-                      required
-                    />
-                  </div>
+                <div className="rounded-2xl bg-white/60 border border-dashed border-amber-200 p-4 text-center">
+                  <Smartphone size={24} className="mx-auto mb-2 text-amber-500" />
+                  <p className="text-sm text-gray-600">
+                    {language === 'ko'
+                      ? '휴대폰으로 비밀번호를 재설정하는 기능은 준비 중입니다. 현재는 이메일을 사용해주세요.'
+                      : 'Password reset via phone is on the way. Please use your email address for now.'}
+                  </p>
                 </div>
               </TabsContent>
 

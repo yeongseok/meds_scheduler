@@ -13,7 +13,7 @@
 - [ ] Enable App Check, email verification, and other recommended Firebase security features once infrastructure is stable.
 
 ## Authentication
-- [x] Connect existing authentication UI (Login, Sign Up, Forgot Password) to functions in `src/lib/firebase/auth.ts` while keeping mock flows until approved. *(Social/Kakao placeholders still mock-only)*
+- [x] Connect existing authentication UI (Login, Sign Up, Forgot Password) to functions in `src/lib/firebase/auth.ts` while keeping mock flows until approved. *(Social/Kakao placeholders still mock-only; phone recovery disabled pending implementation)*
 - [ ] Verify email/password sign-in and optional Google provider work through Firebase Auth.
 - [ ] Ensure `useAuth` hook surfaces Firebase-backed user/session data without breaking current component layouts.
 - [ ] Confirm localization strings and accessibility cues remain intact after wiring up Firebase responses.
