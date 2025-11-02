@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Users, Mail, Crown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
@@ -17,9 +17,85 @@ import { ReceivedInvitationCard } from './ReceivedInvitationCard';
 import { ActiveGuardianCard } from './ActiveGuardianCard';
 import { PendingInviteCard } from './PendingInviteCard';
 import { GuardianSectionHeader } from './GuardianSectionHeader';
+import { useAuth, useGuardians } from '../lib/hooks';
+import { getInvitations, getSentInvitations } from '../lib/firebase';
+import type { Guardian as GuardianRecord, Invitation } from '../lib/types';
+
+const COLOR_CLASSES = ['bg-sky-400', 'bg-blue-500', 'bg-amber-400', 'bg-emerald-400', 'bg-purple-500', 'bg-rose-400'];
+
+const stringToColor = (value: string | undefined) => {
+  if (!value) {
+    return COLOR_CLASSES[0];
+  }
+  const hash = value.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return COLOR_CLASSES[Math.abs(hash) % COLOR_CLASSES.length];
+};
+
+const getInitials = (value: string | undefined) => {
+  if (!value) {
+    return '??';
+  }
+
+  const base = value.includes('@') ? value.split('@')[0] : value;
+  const cleaned = base.trim();
+
+  if (!cleaned) {
+    return '??';
+  }
+
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    const normalized = parts[0].replace(/[^A-Za-z가-힣]/g, '');
+    if (normalized.length >= 2) {
+      return (normalized[0] + normalized[normalized.length - 1]).toUpperCase();
+    }
+    return normalized.toUpperCase().slice(0, 2).padEnd(2, normalized.toUpperCase());
+  }
+
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const toDate = (value: unknown): Date | null => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate();
+  }
+  if (typeof value === 'string' || typeof value === 'number') {
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+};
+
+const formatDateForDisplay = (value: unknown, language: 'ko' | 'en') => {
+  const date = toDate(value);
+  if (!date) {
+    return language === 'ko' ? '날짜 미정' : 'Not set';
+  }
+
+  const formatter = new Intl.DateTimeFormat(language === 'ko' ? 'ko-KR' : 'en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  return formatter.format(date);
+};
 
 export function GuardiansPage() {
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const {
+    guardians: firebaseGuardians,
+    loading: guardiansLoading,
+    error: guardiansError
+  } = useGuardians(user?.uid, false);
+  const [sentInvitations, setSentInvitations] = useState<Invitation[]>([]);
+  const [receivedInvitationsRaw, setReceivedInvitationsRaw] = useState<Invitation[]>([]);
+  const [invitationsLoading, setInvitationsLoading] = useState(false);
+  const [invitationsError, setInvitationsError] = useState<string | null>(null);
+  
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   
   // Alert dialog states
@@ -42,8 +118,63 @@ export function GuardiansPage() {
   const [selectedReceivedInvite, setSelectedReceivedInvite] = useState<{id: string, fromName: string} | null>(null);
   const [acceptRelationship, setAcceptRelationship] = useState('');
 
-  // Mock data for guardians
-  const guardians = [
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!user?.uid && !user?.email) {
+      setSentInvitations([]);
+      setReceivedInvitationsRaw([]);
+      setInvitationsLoading(false);
+      setInvitationsError(null);
+      return;
+    }
+
+    const fetchInvitations = async () => {
+      setInvitationsLoading(true);
+      try {
+        const [sent, received] = await Promise.all([
+          user?.uid ? getSentInvitations(user.uid) : Promise.resolve([]),
+          user?.email ? getInvitations(user.email) : Promise.resolve([])
+        ]);
+
+        if (!cancelled) {
+          setSentInvitations(sent);
+          setReceivedInvitationsRaw(received);
+          setInvitationsError(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setInvitationsError(error instanceof Error ? error.message : 'Failed to load invitations');
+          setSentInvitations([]);
+          setReceivedInvitationsRaw([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setInvitationsLoading(false);
+        }
+      }
+    };
+
+    fetchInvitations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, user?.email]);
+
+  useEffect(() => {
+    if (guardiansError) {
+      console.error('Failed to load guardians', guardiansError);
+    }
+  }, [guardiansError]);
+
+  useEffect(() => {
+    if (invitationsError) {
+      console.error('Failed to load invitations', invitationsError);
+    }
+  }, [invitationsError]);
+
+  const mockActiveGuardians = useMemo(() => [
     {
       id: '1',
       name: 'Sarah Johnson',
@@ -68,19 +199,18 @@ export function GuardiansPage() {
       initials: 'MC',
       color: 'bg-amber-400'
     }
-  ];
+  ], [language]);
 
-  const pendingInvites = [
+  const mockPendingInvites = useMemo(() => [
     {
       id: '3',
       email: 'john.smith@email.com',
       sentDate: 'Jan 28, 2025',
       status: 'pending'
     }
-  ];
+  ], []);
 
-  // Mock data for received invitations
-  const receivedInvitations = [
+  const mockReceivedInvitations = useMemo(() => [
     {
       id: 'r1',
       fromName: 'Robert Miller',
@@ -103,7 +233,98 @@ export function GuardiansPage() {
       initials: 'ED',
       color: 'bg-amber-300'
     }
-  ];
+  ], [language]);
+
+  const activeGuardians = useMemo(() => {
+    if (!user?.uid) {
+      return mockActiveGuardians;
+    }
+
+    if (guardiansLoading || guardiansError) {
+      return [];
+    }
+
+    return firebaseGuardians.map((guardian: GuardianRecord) => {
+      const name = guardian.guardianName || guardian.guardianEmail || '';
+      const relationshipFallback = language === 'ko' ? '보호자' : 'Guardian';
+      return {
+        id: guardian.id,
+        name: name || relationshipFallback,
+        email: guardian.guardianEmail || '',
+        relationship: guardian.relationship || relationshipFallback,
+        status: guardian.status,
+        canViewHistory: guardian.permissions?.viewHistory ?? true,
+        canGetNotifications: guardian.permissions?.receiveAlerts ?? false,
+        addedDate: formatDateForDisplay(guardian.createdAt, language),
+        initials: getInitials(name || guardian.guardianEmail || guardian.id),
+        color: stringToColor(name || guardian.guardianEmail || guardian.id)
+      };
+    });
+  }, [
+    user?.uid,
+    guardiansLoading,
+    guardiansError,
+    firebaseGuardians,
+    language,
+    mockActiveGuardians
+  ]);
+
+  const pendingInvites = useMemo(() => {
+    if (!user?.uid) {
+      return mockPendingInvites;
+    }
+
+    if (invitationsLoading || invitationsError) {
+      return [];
+    }
+
+    return sentInvitations.map(invitation => ({
+      id: invitation.id,
+      email: invitation.toEmail,
+      sentDate: formatDateForDisplay(invitation.invitedAt, language),
+      status: invitation.status
+    }));
+  }, [
+    user?.uid,
+    invitationsLoading,
+    invitationsError,
+    sentInvitations,
+    language,
+    mockPendingInvites
+  ]);
+
+  const receivedInvitations = useMemo(() => {
+    if (!user?.email) {
+      return mockReceivedInvitations;
+    }
+
+    if (invitationsLoading || invitationsError) {
+      return [];
+    }
+
+    return receivedInvitationsRaw.map(invitation => {
+      const name = invitation.fromUserName || invitation.fromUserEmail || invitation.fromUserId || '';
+      const relationshipFallback = language === 'ko' ? '가족' : 'Family';
+      return {
+        id: invitation.id,
+        fromName: name || relationshipFallback,
+        fromEmail: invitation.fromUserEmail || '',
+        relationship: invitation.relationship || relationshipFallback,
+        canViewHistory: true,
+        canGetNotifications: true,
+        receivedDate: formatDateForDisplay(invitation.invitedAt, language),
+        initials: getInitials(name || invitation.fromUserEmail || invitation.id),
+        color: stringToColor(name || invitation.fromUserEmail || invitation.id)
+      };
+    });
+  }, [
+    user?.email,
+    invitationsLoading,
+    invitationsError,
+    receivedInvitationsRaw,
+    language,
+    mockReceivedInvitations
+  ]);
 
   return (
     <div className="h-full flex flex-col bg-gradient-to-b from-amber-50 to-orange-50">
@@ -137,7 +358,7 @@ export function GuardiansPage() {
                   language={language}
                   onAccept={() => {
                     // Check if user already has 1 or more guardians in their care circle
-                    if (guardians.length >= 1) {
+                    if (activeGuardians.length >= 1) {
                       setShowUpgradeDialog(true);
                     } else {
                       setSelectedReceivedInvite({ id: invite.id, fromName: invite.fromName });
@@ -160,12 +381,12 @@ export function GuardiansPage() {
             icon={Users}
             iconColor="text-orange-600"
             title={language === 'ko' ? '활성 보호자' : 'Active Guardians'}
-            count={guardians.length}
+            count={activeGuardians.length}
             badgeColor="bg-orange-100 text-orange-700"
           />
 
           <div className="space-y-3">
-            {guardians.map((guardian) => (
+            {activeGuardians.map((guardian) => (
               <ActiveGuardianCard
                 key={guardian.id}
                 guardian={guardian}

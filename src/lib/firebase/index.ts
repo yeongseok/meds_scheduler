@@ -48,6 +48,7 @@ export {
   // Invitation functions
   sendInvitation,
   getInvitations,
+  getSentInvitations,
   respondToInvitation,
   
   // Settings functions

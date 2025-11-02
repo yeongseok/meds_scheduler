@@ -315,6 +315,25 @@ export const getInvitations = async (email: string): Promise<Invitation[]> => {
   }
 };
 
+export const getSentInvitations = async (userId: string): Promise<Invitation[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.INVITATIONS),
+      where('fromUserId', '==', userId),
+      where('status', '==', 'pending'),
+      orderBy('invitedAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Invitation[];
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to get sent invitations');
+  }
+};
+
 export const respondToInvitation = async (
   invitationId: string,
   accept: boolean
