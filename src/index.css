@@ -125,6 +125,7 @@
     --color-teal-600: oklch(.6 .118 184.704);
     --color-teal-700: oklch(.511 .096 186.391);
     --color-cyan-50: oklch(.984 .019 200.873);
+    --color-sky-800: oklch(.443 .11 240.79);
     --color-blue-50: oklch(.97 .014 254.604);
     --color-blue-100: oklch(.932 .032 255.585);
     --color-blue-200: oklch(.882 .059 254.128);
@@ -2972,6 +2973,10 @@
 
   .text-secondary-foreground {
     color: var(--secondary-foreground);
+  }
+
+  .text-sky-800 {
+    color: var(--color-sky-800);
   }
 
   .text-stone-400 {

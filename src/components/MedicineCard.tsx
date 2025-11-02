@@ -69,7 +69,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = React.memo(({
           
           {/* Medicine Info */}
           <div className="flex-1">
-            <h3 className={`font-semibold text-lg ${medicine.status === 'overdue' ? 'text-orange-800' : 'text-gray-800'}`}>
+            <h3 className={`font-semibold text-lg ${medicine.status === 'overdue' ? 'text-sky-800' : 'text-gray-800'}`}>
               {medicine.name}
             </h3>
             <p className="text-base text-gray-600">
