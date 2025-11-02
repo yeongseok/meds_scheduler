@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, Plus, CheckCircle, HelpCircle, Activity, Bell, MessageCircle, Mail, Phone } from 'lucide-react';
+import { Settings, Plus, CheckCircle, HelpCircle, Activity, Bell, MessageCircle, Mail, Phone, Crown, Star, Zap } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
@@ -50,6 +50,7 @@ export function SharedHeader({
 }: SharedHeaderProps) {
   const { t, language } = useLanguage();
   const [showAddRecipientDialog, setShowAddRecipientDialog] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [newRecipientName, setNewRecipientName] = useState('');
   const [newRecipientEmail, setNewRecipientEmail] = useState('');
   const [newRecipientPhone, setNewRecipientPhone] = useState('');
@@ -229,7 +230,15 @@ export function SharedHeader({
 
             {/* Add New Recipient Button */}
             <motion.button
-              onClick={() => setShowAddRecipientDialog(true)}
+              onClick={() => {
+                // Check if user already has 1 or more care recipients (excluding "me")
+                const recipientsCount = careRecipients.filter(r => r.id !== 'me').length;
+                if (recipientsCount >= 1) {
+                  setShowUpgradeDialog(true);
+                } else {
+                  setShowAddRecipientDialog(true);
+                }
+              }}
               className="flex flex-col items-center flex-shrink-0 group"
               whileTap={{ scale: 0.95 }}
             >
@@ -246,7 +255,7 @@ export function SharedHeader({
 
       {/* Add Care Recipient Dialog */}
       <Dialog open={showAddRecipientDialog} onOpenChange={setShowAddRecipientDialog}>
-        <DialogContent className="max-w-md rounded-2xl">
+        <DialogContent className="max-w-md rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-[20px]">
               {language === 'ko' ? '보호 대상자 추가' : 'Add Care Recipient'}
@@ -420,6 +429,104 @@ export function SharedHeader({
             >
               {language === 'ko' ? '초대 보내기' : 'Send Invitation'}
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Pro Upgrade Dialog */}
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader className="sr-only">
+            <DialogTitle>
+              {language === 'ko' ? '프리미엄으로 업그레이드' : 'Upgrade to Premium'}
+            </DialogTitle>
+            <DialogDescription>
+              {language === 'ko' 
+                ? '더 많은 보호 대상자를 추가하려면 프리미엄이 필요합니다'
+                : 'Premium required to add more care recipients'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-center space-y-4 py-4">
+            {/* Premium Icon */}
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                <Crown className="text-white" size={40} />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div>
+              <h2 className="text-[24px] font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                {language === 'ko' ? '프리미엄으로 업그레이드' : 'Upgrade to Premium'}
+              </h2>
+              <p className="text-[16px] text-gray-600 mt-2">
+                {language === 'ko' 
+                  ? '더 많은 보호 대상자를 추가하려면 프리미엄이 필요합니다'
+                  : 'Premium required to add more care recipients'}
+              </p>
+            </div>
+
+            {/* Features List */}
+            <div className="space-y-3 text-left bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Star className="text-white" size={14} />
+                </div>
+                <div>
+                  <p className="text-[16px] font-semibold text-gray-800">
+                    {language === 'ko' ? '무제한 보호 대상자' : 'Unlimited Care Recipients'}
+                  </p>
+                  <p className="text-[14px] text-gray-600">
+                    {language === 'ko' 
+                      ? '가족 모두의 약 관리를 한 곳에서'
+                      : 'Manage medications for your entire family'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing */}
+            <div className="bg-white rounded-xl p-4 border-2 border-amber-200">
+              <div className="flex items-baseline justify-center gap-2">
+                <span className="text-[14px] text-gray-500 line-through">
+                  {language === 'ko' ? '₩9,900' : '$9.99'}
+                </span>
+                <span className="text-[32px] font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  {language === 'ko' ? '₩4,900' : '$4.99'}
+                </span>
+                <span className="text-[16px] text-gray-600">
+                  {language === 'ko' ? '/월' : '/month'}
+                </span>
+              </div>
+              <p className="text-[14px] text-amber-600 font-semibold mt-1">
+                {language === 'ko' ? '50% 할인 중!' : '50% OFF Limited Time!'}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              <Button
+                onClick={() => {
+                  toast.success(
+                    language === 'ko' 
+                      ? '프리미엄 구독이 곧 제공될 예정입니다!' 
+                      : 'Premium subscription coming soon!'
+                  );
+                  setShowUpgradeDialog(false);
+                }}
+                className="w-full h-14 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg text-[18px] font-semibold"
+              >
+                <Crown className="mr-2" size={20} />
+                {language === 'ko' ? '프리미엄 시작하기' : 'Start Premium'}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setShowUpgradeDialog(false)}
+                className="w-full text-[16px] text-gray-600"
+              >
+                {language === 'ko' ? '나중에' : 'Maybe Later'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

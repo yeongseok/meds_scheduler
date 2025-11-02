@@ -1091,6 +1091,10 @@
     height: 240px;
   }
 
+  .h-\[340px\] {
+    height: 340px;
+  }
+
   .h-\[calc\(100\%-1px\)\] {
     height: calc(100% - 1px);
   }
@@ -1300,16 +1304,6 @@
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
 
-  .-translate-x-8 {
-    --tw-translate-x: calc(var(--spacing) * -8);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-
-  .translate-x-10 {
-    --tw-translate-x: calc(var(--spacing) * 10);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-
   .translate-x-16 {
     --tw-translate-x: calc(var(--spacing) * 16);
     translate: var(--tw-translate-x) var(--tw-translate-y);
@@ -1325,18 +1319,8 @@
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
 
-  .-translate-y-10 {
-    --tw-translate-y: calc(var(--spacing) * -10);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-
   .-translate-y-16 {
     --tw-translate-y: calc(var(--spacing) * -16);
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-
-  .translate-y-8 {
-    --tw-translate-y: calc(var(--spacing) * 8);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
 
@@ -1433,6 +1417,10 @@
 
   .flex-wrap {
     flex-wrap: wrap;
+  }
+
+  .items-baseline {
+    align-items: baseline;
   }
 
   .items-center {
@@ -1841,16 +1829,6 @@
     background-color: var(--color-amber-200);
   }
 
-  .bg-amber-200\/30 {
-    background-color: color-mix(in srgb, oklch(.924 .12 95.746) 30%, transparent);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-amber-200\/30 {
-      background-color: color-mix(in oklab, var(--color-amber-200) 30%, transparent);
-    }
-  }
-
   .bg-amber-300 {
     background-color: var(--color-amber-300);
   }
@@ -1925,12 +1903,12 @@
     background-color: var(--color-gray-400);
   }
 
-  .bg-gray-600 {
-    background-color: var(--color-gray-600);
-  }
-
   .bg-green-100 {
     background-color: var(--color-green-100);
+  }
+
+  .bg-green-500 {
+    background-color: var(--color-green-500);
   }
 
   .bg-input-background {
@@ -1961,16 +1939,6 @@
 
   .bg-orange-200 {
     background-color: var(--color-orange-200);
-  }
-
-  .bg-orange-200\/30 {
-    background-color: color-mix(in srgb, oklch(.901 .076 70.697) 30%, transparent);
-  }
-
-  @supports (color: color-mix(in lab, red, red)) {
-    .bg-orange-200\/30 {
-      background-color: color-mix(in oklab, var(--color-orange-200) 30%, transparent);
-    }
   }
 
   .bg-orange-300 {
@@ -2151,11 +2119,6 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
-  .from-amber-100 {
-    --tw-gradient-from: var(--color-amber-100);
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  }
-
   .from-amber-200 {
     --tw-gradient-from: var(--color-amber-200);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -2173,6 +2136,11 @@
 
   .from-amber-500 {
     --tw-gradient-from: var(--color-amber-500);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  .from-amber-600 {
+    --tw-gradient-from: var(--color-amber-600);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
@@ -2394,11 +2362,6 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
-  .to-orange-100 {
-    --tw-gradient-to: var(--color-orange-100);
-    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
-  }
-
   .to-orange-300 {
     --tw-gradient-to: var(--color-orange-300);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -2499,6 +2462,10 @@
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
+  .bg-clip-text {
+    background-clip: text;
+  }
+
   .fill-current {
     fill: currentColor;
   }
@@ -2597,6 +2564,10 @@
 
   .py-4 {
     padding-block: calc(var(--spacing) * 4);
+  }
+
+  .py-6 {
+    padding-block: calc(var(--spacing) * 6);
   }
 
   .py-8 {
@@ -3023,6 +2994,10 @@
     color: var(--color-teal-600);
   }
 
+  .text-transparent {
+    color: #0000;
+  }
+
   .text-white {
     color: var(--color-white);
   }
@@ -3053,6 +3028,10 @@
 
   .capitalize {
     text-transform: capitalize;
+  }
+
+  .line-through {
+    text-decoration-line: line-through;
   }
 
   .underline-offset-4 {
@@ -3501,8 +3480,8 @@
   }
 
   @media (hover: hover) {
-    .hover\:bg-gray-700:hover {
-      background-color: var(--color-gray-700);
+    .hover\:bg-green-600:hover {
+      background-color: var(--color-green-600);
     }
   }
 
@@ -3545,6 +3524,12 @@
   @media (hover: hover) {
     .hover\:bg-red-100:hover {
       background-color: var(--color-red-100);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-red-600:hover {
+      background-color: var(--color-red-600);
     }
   }
 
@@ -4236,18 +4221,6 @@
   @media (width >= 40rem) {
     .sm\:max-w-lg {
       max-width: var(--container-lg);
-    }
-  }
-
-  @media (width >= 40rem) {
-    .sm\:max-w-md {
-      max-width: var(--container-md);
-    }
-  }
-
-  @media (width >= 40rem) {
-    .sm\:flex-col {
-      flex-direction: column;
     }
   }
 

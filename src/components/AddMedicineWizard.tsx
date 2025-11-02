@@ -639,7 +639,7 @@ export function AddMedicineWizard({ isOpen, onClose, onAddMedicine }: AddMedicin
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg h-[85vh] p-0 gap-0 flex flex-col [&>button]:hidden">
+      <DialogContent className="max-w-lg h-[85vh] p-0 gap-0 flex flex-col [&>button]:hidden rounded-3xl overflow-hidden">
         <DialogTitle className="sr-only">
           {language === 'ko' ? '새 약 추가' : 'Add New Medication'}
         </DialogTitle>

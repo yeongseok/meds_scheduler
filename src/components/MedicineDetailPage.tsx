@@ -15,6 +15,7 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
+import { ScrollArea } from './ui/scroll-area';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { useLanguage } from './LanguageContext';
 
@@ -218,48 +219,52 @@ export function MedicineDetailPage({ medicineId, onBack }: MedicineDetailPagePro
         {/* Upcoming Doses */}
         <Card className="p-4">
           <h3 className="mb-3 text-[20px] font-bold">{language === 'ko' ? '예정된 복용' : 'Upcoming Doses'}</h3>
-          <div className="space-y-2">
-            {upcomingDoses.map((dose, index) => (
-              <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-background border">
-                <div className="flex items-center space-x-3">
-                  {getStatusIcon(dose.status)}
-                  <div>
-                    <p className="text-sm font-medium text-[16px]">{dose.date} {dose.time}</p>
+          <ScrollArea className="h-[340px]">
+            <div className="space-y-2 pr-4">
+              {upcomingDoses.map((dose, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background border">
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(dose.status)}
+                    <div>
+                      <p className="text-sm font-medium text-[16px]">{dose.date} {dose.time}</p>
+                    </div>
                   </div>
+                  <span className="text-xs text-muted-foreground capitalize text-[14px]">
+                    {dose.status === 'pending' 
+                      ? (language === 'ko' ? '대기 중' : 'Pending')
+                      : (language === 'ko' ? '예정' : 'Upcoming')}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground capitalize text-[14px]">
-                  {dose.status === 'pending' 
-                    ? (language === 'ko' ? '대기 중' : 'Pending')
-                    : (language === 'ko' ? '예정' : 'Upcoming')}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         </Card>
 
         {/* Recent History */}
         <Card className="p-4">
           <h3 className="mb-3 font-bold text-[20px]">{language === 'ko' ? '최근 기록' : 'Recent History'}</h3>
-          <div className="space-y-2">
-            {recentHistory.map((entry, index) => (
-              <div key={index} className="flex items-center justify-between p-2 rounded-lg bg-background border">
-                <div className="flex items-center space-x-3">
-                  {getStatusIcon(entry.status)}
-                  <div>
-                    <p className="text-sm font-medium text-[16px]">{entry.date} {entry.time}</p>
-                    {entry.note && (
-                      <p className="text-xs text-muted-foreground text-[14px]">{entry.note}</p>
-                    )}
+          <ScrollArea className="h-[340px]">
+            <div className="space-y-2 pr-4">
+              {recentHistory.map((entry, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-background border">
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(entry.status)}
+                    <div>
+                      <p className="text-sm font-medium text-[16px]">{entry.date} {entry.time}</p>
+                      {entry.note && (
+                        <p className="text-xs text-muted-foreground text-[14px]">{entry.note}</p>
+                      )}
+                    </div>
                   </div>
+                  <span className="text-xs text-muted-foreground capitalize text-[14px]">
+                    {entry.status === 'taken' 
+                      ? (language === 'ko' ? '복용' : 'Taken')
+                      : (language === 'ko' ? '누락' : 'Missed')}
+                  </span>
                 </div>
-                <span className="text-xs text-muted-foreground capitalize text-[14px]">
-                  {entry.status === 'taken' 
-                    ? (language === 'ko' ? '복용' : 'Taken')
-                    : (language === 'ko' ? '누락' : 'Missed')}
-                </span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </ScrollArea>
         </Card>
 
         {/* Medical Information */}

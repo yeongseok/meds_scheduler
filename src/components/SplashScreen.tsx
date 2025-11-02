@@ -65,7 +65,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <div className="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center">
               <Pill size={24} className="text-amber-600" />
             </div>
-            <span className="text-xs text-gray-600">
+            <span className="text-[16px] text-gray-600">
               {language === 'ko' ? '복용 기록' : 'Medication Log'}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
               <Clock size={24} className="text-emerald-600" />
             </div>
-            <span className="text-xs text-gray-600">
+            <span className="text-[16px] text-gray-600">
               {language === 'ko' ? '알림 설정' : 'Reminders'}
             </span>
           </div>
@@ -83,7 +83,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
             <div className="w-16 h-16 bg-rose-100 rounded-2xl flex items-center justify-center">
               <Heart size={24} className="text-rose-600" />
             </div>
-            <span className="text-xs text-gray-600">
+            <span className="text-[16px] text-gray-600">
               {language === 'ko' ? '건강 유지' : 'Stay Healthy'}
             </span>
           </div>

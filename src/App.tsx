@@ -14,7 +14,6 @@ import { MedicineDetailPage } from './components/MedicineDetailPage';
 import { GuardiansPage } from './components/GuardiansPage';
 import { GuardianViewPage } from './components/GuardianViewPage';
 import { ProfilePage } from './components/ProfilePage';
-import { AdBanner } from './components/AdBanner';
 import { InAppAdvertise } from './components/InAppAdvertise';
 import { AddMedicineWizard } from './components/AddMedicineWizard';
 import { AlarmScreen } from './components/AlarmScreen';
@@ -154,11 +153,6 @@ function AppContent() {
         <div className="flex-1 overflow-hidden">
           {renderCurrentPage()}
         </div>
-
-        {/* Ad Banner */}
-        {currentPage !== 'detail' && currentPage !== 'guardian-view' && currentPage !== 'edit' && currentPage !== 'profile' && (
-          <AdBanner />
-        )}
 
         {/* In-App Advertise Section */}
         {currentPage !== 'detail' && currentPage !== 'guardian-view' && currentPage !== 'edit' && currentPage !== 'profile' && (

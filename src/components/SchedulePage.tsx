@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, Bell, Zap, Sun, Moon, Sunrise, Sunset, Pill, Repeat, AlertCircle, Edit2, Heart, Users } from 'lucide-react';
-import { motion } from 'motion/react';
-import { Card } from './ui/card';
+import { Calendar, Pill } from 'lucide-react';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Switch } from './ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useLanguage } from './LanguageContext';
 import { SharedHeader, CareRecipient } from './SharedHeader';
+import { ScheduleWeekNavigator } from './ScheduleWeekNavigator';
+import { ScheduleDateSelector } from './ScheduleDateSelector';
+import { ScheduleMedicineItem } from './ScheduleMedicineItem';
+import { MedicineListCard } from './MedicineListCard';
 
 interface SchedulePageProps {
   onEditMedicine?: (medicineId: string, medicineName: string) => void;
@@ -16,6 +15,17 @@ interface SchedulePageProps {
   selectedView?: string;
   setSelectedView?: (view: string) => void;
 }
+
+interface Medicine {
+  id: string;
+  name: string;
+  time: string;
+  dosage: string;
+  status: 'taken' | 'missed' | 'pending' | 'upcoming';
+  period: 'morning' | 'afternoon' | 'evening' | 'night';
+}
+
+type ScheduleData = Record<string, Medicine[]>;
 
 export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedView: propSelectedView, setSelectedView: propSetSelectedView }: SchedulePageProps = {}) {
   const { t, language } = useLanguage();
@@ -26,12 +36,6 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
   const selectedView = propSelectedView ?? localSelectedView;
   const setSelectedView = propSetSelectedView ?? setLocalSelectedView;
   const [selectedDateIndex, setSelectedDateIndex] = useState<number>(new Date().getDay() === 0 ? 6 : new Date().getDay() - 1); // Monday=0
-  const [reminderSettings, setReminderSettings] = useState({
-    morningReminder: true,
-    afternoonReminder: true,
-    eveningReminder: true,
-    smartNotifications: true
-  });
 
   // Mock data for care recipients
   const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
@@ -66,7 +70,7 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
   ]);
 
   // Mock schedule data with enhanced time periods (My medications)
-  const myScheduleData = {
+  const myScheduleData: ScheduleData = {
     '월요일': [
       { id: '1', name: 'Vitamin D', time: '08:00', dosage: '1000 IU', status: 'taken', period: 'morning' },
       { id: '2', name: 'Blood Pressure Med', time: '12:00', dosage: '10mg', status: 'taken', period: 'afternoon' },
@@ -112,7 +116,7 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
   };
 
   // Schedule data for care recipients
-  const careRecipientSchedules: Record<string, typeof myScheduleData> = {
+  const careRecipientSchedules: Record<string, ScheduleData> = {
     person1: {
       '월요일': [
         { id: 'p1-1', name: 'Diabetes Med', time: '07:30', dosage: '500mg', status: 'taken', period: 'morning' },
@@ -194,80 +198,11 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
   const currentDate = new Date();
   const currentDayIndex = (currentDate.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'taken':
-        return 'bg-amber-500';
-      case 'missed':
-        return 'bg-orange-500';
-      case 'pending':
-        return 'bg-amber-500 animate-pulse';
-      case 'upcoming':
-        return 'bg-stone-400';
-      default:
-        return 'bg-stone-400';
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'taken':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs text-[14px]">✓ {language === 'ko' ? '완료' : 'Done'}</Badge>;
-      case 'missed':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200 text-xs text-[14px]">⚠️ {language === 'ko' ? '놓침' : 'Missed'}</Badge>;
-      case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200 text-xs animate-pulse text-[14px]">🔔 {language === 'ko' ? '복용 시간' : 'Time to take'}</Badge>;
-      case 'upcoming':
-        return <Badge variant="outline" className="text-stone-600 border-stone-300 text-xs text-[14px]">⏰ {language === 'ko' ? '예정' : 'Upcoming'}</Badge>;
-      default:
-        return <Badge variant="outline" className="text-xs text-[14px]">?</Badge>;
-    }
-  };
-
-  const getPeriodIcon = (period: string) => {
-    switch (period) {
-      case 'morning':
-        return <Sunrise size={14} className="text-amber-500" />;
-      case 'afternoon':
-        return <Sun size={14} className="text-orange-500" />;
-      case 'evening':
-        return <Sunset size={14} className="text-orange-600" />;
-      case 'night':
-        return <Moon size={14} className="text-stone-600" />;
-      default:
-        return <Clock size={14} className="text-stone-500" />;
-    }
-  };
-
-  const getPeriodGradient = (period: string) => {
-    switch (period) {
-      case 'morning':
-        return 'from-amber-50 to-orange-50';
-      case 'afternoon':
-        return 'from-orange-50 to-amber-50';
-      case 'evening':
-        return 'from-orange-50 to-stone-50';
-      case 'night':
-        return 'from-stone-50 to-amber-50';
-      default:
-        return 'from-stone-50 to-amber-50';
-    }
-  };
-
   const formatDate = (dayIndex: number) => {
     const date = new Date();
     const diff = dayIndex - currentDayIndex + (currentWeek * 7);
     date.setDate(date.getDate() + diff);
     return date.getDate();
-  };
-
-  const getWeekDayName = (dayIndex: number) => {
-    const date = new Date();
-    const diff = dayIndex - currentDayIndex + (currentWeek * 7);
-    date.setDate(date.getDate() + diff);
-    return language === 'ko' 
-      ? ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'][date.getDay()]
-      : ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
   };
 
   const navigateToPreviousWeek = () => {
@@ -361,105 +296,36 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
                 </div>
                 
                 {/* Week Navigation */}
-                <div className="flex items-center justify-between mb-3 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={navigateToPreviousWeek}
-                    className="h-8 px-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300"
-                  >
-                    <ChevronLeft size={18} className="text-amber-600" />
-                  </Button>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={navigateToToday}
-                    className="h-8 text-[14px] font-semibold text-amber-700 hover:bg-amber-50 hover:text-amber-800"
-                  >
-                    {getCurrentWeekMonthYear()}
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={navigateToNextWeek}
-                    className="h-8 px-2 border-amber-200 hover:bg-amber-50 hover:border-amber-300"
-                  >
-                    <ChevronRight size={18} className="text-amber-600" />
-                  </Button>
-                </div>
+                <ScheduleWeekNavigator
+                  currentWeekMonthYear={getCurrentWeekMonthYear()}
+                  onPreviousWeek={navigateToPreviousWeek}
+                  onNextWeek={navigateToNextWeek}
+                  onToday={navigateToToday}
+                  language={language}
+                />
                 
-                <div className="grid grid-cols-7 gap-2">
-                  {days.map((day, index) => {
-                    const dateNum = formatDate(index);
-                    const isToday = index === currentDayIndex && currentWeek === 0;
-                    const isSelected = index === selectedDateIndex;
-                    const hasMissed = hasMissedDose(index);
-                    
-                    return (
-                      <motion.button
-                        key={`${day}-${index}-week${currentWeek}`}
-                        onClick={() => setSelectedDateIndex(index)}
-                        whileTap={{ scale: 0.95 }}
-                        className={`relative flex flex-col items-center justify-center p-2 rounded-lg transition-all duration-200 ${
-                          isSelected
-                            ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-md'
-                            : isToday
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        <span className={`text-[10px] mb-1 ${isSelected ? 'text-white' : 'text-gray-500'}`}>
-                          {language === 'ko' ? day.substring(0, 1) : day.substring(0, 3)}
-                        </span>
-                        <span className={`text-[16px] font-bold ${isSelected ? 'text-white' : 'text-gray-800'}`}>
-                          {dateNum}
-                        </span>
-                        {isToday && !isSelected && (
-                          <div className="w-1 h-1 bg-amber-500 rounded-full mt-1"></div>
-                        )}
-                        {hasMissed && (
-                          <div className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 rounded-full border border-white shadow-md animate-pulse"></div>
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                <ScheduleDateSelector
+                  days={days}
+                  currentDayIndex={currentDayIndex}
+                  currentWeek={currentWeek}
+                  selectedDateIndex={selectedDateIndex}
+                  formatDate={formatDate}
+                  hasMissedDose={hasMissedDose}
+                  onDateSelect={setSelectedDateIndex}
+                  language={language}
+                />
               </div>
 
               {/* Scheduled Pills for Selected Date */}
               <div className="space-y-2">
                 {scheduleData[daysKorean[selectedDateIndex]]?.length > 0 ? (
                   scheduleData[daysKorean[selectedDateIndex]].map((medicine, index) => (
-                    <div 
-                      key={`${medicine.id}-${medicine.time}-${index}`} 
-                      className={`flex items-center justify-between gap-3 p-3 rounded-lg bg-gradient-to-r ${getPeriodGradient(medicine.period)} border ${
-                        medicine.status === 'pending' 
-                          ? 'border-amber-300 ring-2 ring-amber-100' 
-                          : medicine.status === 'missed'
-                          ? 'border-orange-300'
-                          : 'border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-3 min-w-0 flex-1">
-                        <div className={`w-10 h-10 ${getStatusColor(medicine.status)} rounded-full flex items-center justify-center flex-shrink-0 shadow-sm`}>
-                          <Pill className="text-white" size={18} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold text-gray-800 text-[16px]">{medicine.name}</p>
-                          <div className="flex items-center space-x-2 text-xs text-gray-600 text-[14px] mt-1">
-                            {getPeriodIcon(medicine.period)}
-                            <span>{medicine.time}</span>
-                            <span>•</span>
-                            <span>{medicine.dosage}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0">
-                        {getStatusBadge(medicine.status)}
-                      </div>
-                    </div>
+                    <ScheduleMedicineItem
+                      key={`${medicine.id}-${medicine.time}-${index}`}
+                      medicine={medicine}
+                      index={index}
+                      language={language}
+                    />
                   ))
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -471,157 +337,57 @@ export function SchedulePage({ onEditMedicine, onNavigateToSettings, selectedVie
             </TabsContent>
 
             <TabsContent value="all" className="space-y-3">
-              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gradient-to-r from-amber-200 to-orange-300 rounded-2xl flex items-center justify-center">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        Vitamin D
-                      </h3>
-                      <p className="text-base text-gray-600">
-                        1000 IU • {language === 'ko' ? '정제' : 'Tablet'}
-                      </p>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
-                          {language === 'ko' ? '매일' : 'Daily'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0"
-                    onClick={() => onEditMedicine?.('1', 'Vitamin D')}
-                  >
-                    <Edit2 size={16} className="text-amber-600" />
-                  </Button>
-                </div>
-                <div className="m-[0px] pl-[72px] text-sm text-gray-600">
-                  <Clock size={14} className="inline mr-1" />
-                  {language === 'ko' ? '매일 오전 08:00' : 'Daily at 08:00 AM'}
-                </div>
-              </Card>
+              <MedicineListCard
+                id="1"
+                name="Vitamin D"
+                dosage="1000 IU"
+                formType={language === 'ko' ? '정제' : 'Tablet'}
+                frequency={language === 'ko' ? '매일' : 'Daily'}
+                times={language === 'ko' ? '매일 오전 08:00' : 'Daily at 08:00 AM'}
+                gradientColors="from-amber-200 to-orange-300"
+                onEdit={onEditMedicine}
+                editIconColor="text-amber-600"
+                language={language}
+              />
 
-              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gradient-to-r from-orange-200 to-red-300 rounded-2xl flex items-center justify-center">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        Blood Pressure Med
-                      </h3>
-                      <p className="text-base text-gray-600">
-                        10mg • {language === 'ko' ? '정제' : 'Tablet'}
-                      </p>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
-                          {language === 'ko' ? '하루 2회' : '2x daily'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0"
-                    onClick={() => onEditMedicine?.('3', 'Blood Pressure Med')}
-                  >
-                    <Edit2 size={16} className="text-orange-600" />
-                  </Button>
-                </div>
-                <div className="mt-2 pl-[72px] text-sm text-gray-600">
-                  <Clock size={14} className="inline mr-1" />
-                  {language === 'ko' ? '매일 오후 12:00, 오후 08:00' : 'Daily at 12:00 PM, 08:00 PM'}
-                </div>
-              </Card>
+              <MedicineListCard
+                id="3"
+                name="Blood Pressure Med"
+                dosage="10mg"
+                formType={language === 'ko' ? '정제' : 'Tablet'}
+                frequency={language === 'ko' ? '하루 2회' : '2x daily'}
+                times={language === 'ko' ? '매일 오후 12:00, 오후 08:00' : 'Daily at 12:00 PM, 08:00 PM'}
+                gradientColors="from-orange-200 to-red-300"
+                onEdit={onEditMedicine}
+                editIconColor="text-orange-600"
+                language={language}
+              />
 
-              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gradient-to-r from-amber-200 to-orange-300 rounded-2xl flex items-center justify-center">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        Calcium
-                      </h3>
-                      <p className="text-base text-gray-600">
-                        500mg • {language === 'ko' ? '정제' : 'Tablet'}
-                      </p>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
-                          {language === 'ko' ? '하루 2회' : '2x daily'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0"
-                    onClick={() => onEditMedicine?.('4', 'Calcium')}
-                  >
-                    <Edit2 size={16} className="text-amber-600" />
-                  </Button>
-                </div>
-                <div className="mt-2 pl-[72px] text-sm text-gray-600">
-                  <Clock size={14} className="inline mr-1" />
-                  {language === 'ko' ? '매일 오후 02:00, 오후 06:00' : 'Daily at 02:00 PM, 06:00 PM'}
-                </div>
-              </Card>
+              <MedicineListCard
+                id="4"
+                name="Calcium"
+                dosage="500mg"
+                formType={language === 'ko' ? '정제' : 'Tablet'}
+                frequency={language === 'ko' ? '하루 2회' : '2x daily'}
+                times={language === 'ko' ? '매일 오후 02:00, 오후 06:00' : 'Daily at 02:00 PM, 06:00 PM'}
+                gradientColors="from-amber-200 to-orange-300"
+                onEdit={onEditMedicine}
+                editIconColor="text-amber-600"
+                language={language}
+              />
 
-              <Card className="medicine-card p-3 border-0 hover:shadow-lg transition-all duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-14 h-14 bg-gradient-to-r from-stone-300 to-amber-400 rounded-2xl flex items-center justify-center">
-                      <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                        <div className="w-4 h-4 bg-gray-400 rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg text-gray-800">
-                        Sleep Aid
-                      </h3>
-                      <p className="text-base text-gray-600">
-                        5mg • {language === 'ko' ? '정제' : 'Tablet'}
-                      </p>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="text-stone-600 border-stone-300 text-sm">
-                          {language === 'ko' ? '필요시' : 'As needed'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0"
-                    onClick={() => onEditMedicine?.('5', 'Sleep Aid')}
-                  >
-                    <Edit2 size={16} className="text-stone-600" />
-                  </Button>
-                </div>
-                <div className="mt-2 pl-[72px] text-sm text-gray-600">
-                  <Clock size={14} className="inline mr-1" />
-                  {language === 'ko' ? '필요시 오후 09:30' : 'As needed at 09:30 PM'}
-                </div>
-              </Card>
+              <MedicineListCard
+                id="5"
+                name="Sleep Aid"
+                dosage="5mg"
+                formType={language === 'ko' ? '정제' : 'Tablet'}
+                frequency={language === 'ko' ? '필요시' : 'As needed'}
+                times={language === 'ko' ? '필요시 오후 09:30' : 'As needed at 09:30 PM'}
+                gradientColors="from-stone-300 to-amber-400"
+                onEdit={onEditMedicine}
+                editIconColor="text-stone-600"
+                language={language}
+              />
             </TabsContent>
           </Tabs>
         </div>
