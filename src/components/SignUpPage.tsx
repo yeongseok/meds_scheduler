@@ -14,6 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+import { signUpWithEmail, signInWithGoogle } from '../lib/firebase/auth';
+import { createUserProfile } from '../lib/firebase/db';
 
 interface SignUpPageProps {
   onBackToLogin: () => void;
@@ -32,11 +34,13 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [showPasswordMismatchDialog, setShowPasswordMismatchDialog] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simple validation
     if (password !== confirmPassword) {
       setShowPasswordMismatchDialog(true);
       return;
@@ -47,8 +51,51 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
       return;
     }
     
-    // In real app, this would create account
-    onSignUp();
+    try {
+      setError(null);
+      setLoading(true);
+      const user = await signUpWithEmail(email, password, name);
+
+      await createUserProfile(user.uid, {
+        uid: user.uid,
+        email: user.email || email,
+        displayName: user.displayName || name,
+        phoneNumber: phone || user.phoneNumber || null,
+        photoURL: user.photoURL || null
+      });
+
+      onSignUp();
+    } catch (signupError: unknown) {
+      const fallbackMessage = language === 'ko' ? '회원가입에 실패했어요. 다시 시도해주세요.' : 'Unable to create your account. Please try again.';
+      const message = signupError instanceof Error ? signupError.message : fallbackMessage;
+      setError(message || fallbackMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      setError(null);
+      setGoogleLoading(true);
+      const user = await signInWithGoogle();
+
+      await createUserProfile(user.uid, {
+        uid: user.uid,
+        email: user.email || '',
+        displayName: user.displayName || '',
+        phoneNumber: user.phoneNumber || null,
+        photoURL: user.photoURL || null
+      });
+
+      onSignUp();
+    } catch (signupError: unknown) {
+      const fallbackMessage = language === 'ko' ? '구글로 회원가입에 실패했어요. 다시 시도해주세요.' : 'Unable to continue with Google. Please try again.';
+      const message = signupError instanceof Error ? signupError.message : fallbackMessage;
+      setError(message || fallbackMessage);
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -232,9 +279,14 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
               </label>
             </div>
 
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
+
             {/* Sign Up Button */}
             <Button
               type="submit"
+              disabled={loading}
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200 mt-6"
             >
               {language === 'ko' ? '계정 만들기' : 'Create Account'}
@@ -280,7 +332,12 @@ export function SignUpPage({ onBackToLogin, onSignUp }: SignUpPageProps) {
             </button>
 
             {/* Google */}
-            <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={googleLoading}
+              className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"

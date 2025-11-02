@@ -4,21 +4,53 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useLanguage } from './LanguageContext';
+import { resetPassword } from '../lib/firebase/auth';
 
 interface ForgotPasswordPageProps {
   onBackToLogin: () => void;
 }
 
 export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
+  const { language } = useLanguage();
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [activeTab, setActiveTab] = useState('email');
+  const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submittedIdentifier, setSubmittedIdentifier] = useState('');
+  const [submittedMethod, setSubmittedMethod] = useState<'email' | 'phone'>('email');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle password reset logic here
-    setIsSubmitted(true);
+
+    if (activeTab === 'phone') {
+      setError(
+        language === 'ko'
+          ? '전화번호로 비밀번호를 재설정하는 기능은 준비 중이에요.'
+          : 'Password reset via phone is coming soon.'
+      );
+      return;
+    }
+
+    try {
+      setError(null);
+      setLoading(true);
+      await resetPassword(email);
+      setSubmittedIdentifier(email);
+      setSubmittedMethod('email');
+      setIsSubmitted(true);
+    } catch (resetError: unknown) {
+      const fallbackMessage =
+        language === 'ko'
+          ? '비밀번호 재설정 메일을 보내지 못했어요. 다시 시도해주세요.'
+          : 'Unable to send the reset email. Please try again.';
+      const message = resetError instanceof Error ? resetError.message : fallbackMessage;
+      setError(message || fallbackMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (isSubmitted) {
@@ -37,21 +69,33 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
               <CheckCircle size={40} className="text-white" />
             </div>
-            
-            <h2 className="mb-4">{activeTab === 'email' ? '이메일' : '휴대전화'}을 확인하세요</h2>
-            
+
+            <h2 className="mb-4">
+              {submittedMethod === 'email'
+                ? language === 'ko'
+                  ? '이메일을 확인해주세요'
+                  : 'Check your email'
+                : language === 'ko'
+                  ? '휴대폰을 확인해주세요'
+                  : 'Check your phone'}
+            </h2>
+
             <p className="text-gray-600 mb-8">
-              <span className="text-amber-600">
-                {activeTab === 'email' ? email : phone}
-              </span>
-              {' '}으로 비밀번호 재설정 링크를 보내드렸습니다. 확인하시고 안내에 따라 비밀번호를 재설정해 주세요.
+              <span className="text-amber-600">{submittedIdentifier}</span>{' '}
+              {submittedMethod === 'email'
+                ? language === 'ko'
+                  ? '로 비밀번호 재설정 링크를 보냈어요. 받은 메일에서 안내를 따라 재설정해주세요.'
+                  : 'has been sent a password reset link. Follow the instructions in the email to reset your password.'
+                : language === 'ko'
+                  ? '로 메시지를 보냈어요. 안내를 따라 비밀번호를 재설정해주세요.'
+                  : 'has been sent a message. Follow the instructions to reset your password.'}
             </p>
 
             <Button
               onClick={onBackToLogin}
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              로그인으로 돌아가기
+              {language === 'ko' ? '로그인으로 돌아가기' : 'Back to Login'}
             </Button>
           </Card>
         </div>
@@ -77,30 +121,36 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
           className="flex items-center gap-2 text-gray-600 hover:text-amber-600 mb-6 transition-colors"
         >
           <ArrowLeft size={20} />
-          <span>로그인으로 돌아가기</span>
+          <span>{language === 'ko' ? '로그인으로 돌아가기' : 'Back to Login'}</span>
         </button>
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="mb-2">비밀번호를 잊으셨나요?</h1>
+          <h1 className="mb-2">
+            {language === 'ko' ? '비밀번호를 잊으셨나요?' : 'Forgot your password?'}
+          </h1>
           <p className="text-gray-600">
-            걱정하지 마세요! 이메일 또는 휴대전화 번호를 입력하시면 비밀번호 재설정 방법을 보내드립니다.
+            {language === 'ko'
+              ? '걱정하지 마세요. 이메일 또는 휴대폰 번호를 입력하시면 비밀번호 재설정 방법을 보내드립니다.'
+              : "Don't worry. Enter your email or phone number and we'll send instructions to reset your password."}
           </p>
         </div>
 
         {/* Reset Card */}
         <Card className="bg-white/80 backdrop-blur-lg border-none shadow-2xl p-6 rounded-3xl">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'email' | 'phone')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="email">이메일</TabsTrigger>
-              <TabsTrigger value="phone">전화번호</TabsTrigger>
+              <TabsTrigger value="email">{language === 'ko' ? '이메일' : 'Email'}</TabsTrigger>
+              <TabsTrigger value="phone">{language === 'ko' ? '휴대폰' : 'Phone'}</TabsTrigger>
             </TabsList>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <TabsContent value="email" className="space-y-5 mt-0">
                 {/* Email Input */}
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-700">이메일 주소</label>
+                  <label className="text-sm text-gray-700">
+                    {language === 'ko' ? '이메일 주소' : 'Email Address'}
+                  </label>
                   <div className="relative">
                     <Mail size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <Input
@@ -118,14 +168,16 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
               <TabsContent value="phone" className="space-y-5 mt-0">
                 {/* Phone Input */}
                 <div className="space-y-2">
-                  <label className="text-sm text-gray-700">휴대전화 번호</label>
+                  <label className="text-sm text-gray-700">
+                    {language === 'ko' ? '휴대폰 번호' : 'Phone Number'}
+                  </label>
                   <div className="relative">
                     <Smartphone size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                     <Input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="010-0000-0000"
+                      placeholder={language === 'ko' ? '010-0000-0000' : '+1 (555) 000-0000'}
                       className="pl-12 h-14 rounded-2xl border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-200 bg-white/50"
                       required
                     />
@@ -133,12 +185,17 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
                 </div>
               </TabsContent>
 
+              {error && (
+                <p className="text-sm text-red-500 text-center">{error}</p>
+              )}
+
               {/* Submit Button */}
               <Button
                 type="submit"
+                disabled={loading}
                 className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                재설정 링크 보내기
+                {language === 'ko' ? '재설정 링크 보내기' : 'Send Reset Link'}
               </Button>
             </form>
           </Tabs>
@@ -147,12 +204,12 @@ export function ForgotPasswordPage({ onBackToLogin }: ForgotPasswordPageProps) {
         {/* Help Text */}
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
-            비밀번호가 기억나셨나요?{' '}
+            {language === 'ko' ? '비밀번호가 기억나셨나요?' : 'Remembered your password?'}{' '}
             <button
               onClick={onBackToLogin}
               className="text-amber-600 hover:text-amber-700 hover:underline"
             >
-              로그인하기
+              {language === 'ko' ? '로그인하기' : 'Back to Login'}
             </button>
           </p>
         </div>
