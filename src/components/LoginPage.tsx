@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Card } from './ui/card';
 import { useLanguage } from './LanguageContext';
+import { signInWithEmail, signInWithGoogle } from '../lib/firebase/auth';
 
 interface LoginPageProps {
   onLogin: () => void;
@@ -16,12 +17,43 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple validation - in real app, this would authenticate
-    if (email && password) {
+
+    if (!email || !password) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setLoading(true);
+      await signInWithEmail(email, password);
       onLogin();
+    } catch (authError: unknown) {
+      const fallbackMessage = language === 'ko' ? '로그인에 실패했어요. 다시 시도해주세요.' : 'Unable to sign in. Please try again.';
+      const message = authError instanceof Error ? authError.message : fallbackMessage;
+      setError(message || fallbackMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError(null);
+      setGoogleLoading(true);
+      await signInWithGoogle();
+      onLogin();
+    } catch (authError: unknown) {
+      const fallbackMessage = language === 'ko' ? '구글 로그인에 실패했어요. 다시 시도해주세요.' : 'Unable to sign in with Google. Please try again.';
+      const message = authError instanceof Error ? authError.message : fallbackMessage;
+      setError(message || fallbackMessage);
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
@@ -120,9 +152,14 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
               </button>
             </div>
 
+            {error && (
+              <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
+
             {/* Login Button */}
             <Button
               type="submit"
+              disabled={loading}
               className="w-full h-14 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:from-amber-500 hover:via-orange-500 hover:to-rose-500 text-white shadow-lg hover:shadow-xl transition-all duration-200 text-base"
             >
               {t('login.signIn')}
@@ -168,7 +205,12 @@ export function LoginPage({ onLogin, onNavigateToSignUp, onNavigateToForgotPassw
             </button>
 
             {/* Google */}
-            <button className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+              className="h-12 rounded-2xl bg-white/80 backdrop-blur-lg border border-gray-200 hover:bg-white hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
                   fill="#4285F4"
