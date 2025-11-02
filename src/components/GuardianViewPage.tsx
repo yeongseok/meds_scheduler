@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Users, ChevronDown, Activity, CheckCircle, AlertCircle, XCircle, Heart, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Label } from './ui/label';
 import { SharedHeader, CareRecipient } from './SharedHeader';
+import { useAuth, useCareRecipients } from '../lib/hooks';
 
 interface GuardianViewPageProps {
   onNavigateToSettings?: () => void;
@@ -53,8 +54,133 @@ export function GuardianViewPage({ onNavigateToSettings }: GuardianViewPageProps
     }
   ]);
 
-  const currentPerson = careRecipients.find(p => p.id === selectedView) || careRecipients[0];
+  const legacyCareRecipients = useRef<CareRecipient[]>(careRecipients);
+  const emptyCareRecipient = useRef<CareRecipient>({
+    id: 'empty',
+    name: '보호 대상 없음 (No Care Recipients)',
+    initials: '??',
+    color: 'bg-gray-300',
+    relation: '보호 대상 없음',
+    todayStatus: {
+      total: 0,
+      taken: 0,
+      overdue: 0,
+      pending: 0,
+      upcoming: 0
+    },
+    healthScore: 0,
+    adherence: 0
+  });
+
+  const { user } = useAuth();
+  const {
+    recipients: guardianRecipients,
+    loading: recipientsLoading,
+    error: recipientsError
+  } = useCareRecipients(user?.uid, false);
+
+  useEffect(() => {
+    if (!user || recipientsError) {
+      setCareRecipients(legacyCareRecipients.current.map(recipient => ({ ...recipient })));
+      setSelectedView(current =>
+        legacyCareRecipients.current.some(recipient => recipient.id === current)
+          ? current
+          : legacyCareRecipients.current[0]?.id ?? 'person1'
+      );
+      return;
+    }
+
+    if (guardianRecipients.length > 0) {
+      const mappedRecipients = guardianRecipients.map(recipient => ({
+        id: recipient.id,
+        name: recipient.name,
+        initials: recipient.initials,
+        color: recipient.color || 'bg-sky-400',
+        relation: recipient.relation,
+        todayStatus: {
+          total: 0,
+          taken: 0,
+          overdue: 0,
+          pending: 0,
+          upcoming: 0
+        },
+        healthScore: 0,
+        adherence: 0
+      }));
+      setCareRecipients(mappedRecipients);
+      setSelectedView(current =>
+        mappedRecipients.some(item => item.id === current)
+          ? current
+          : mappedRecipients[0]?.id ?? emptyCareRecipient.current.id
+      );
+      return;
+    }
+
+    if (!recipientsLoading) {
+      setCareRecipients([{ ...emptyCareRecipient.current }]);
+      setSelectedView(emptyCareRecipient.current.id);
+    }
+  }, [
+    user,
+    guardianRecipients,
+    recipientsLoading,
+    recipientsError,
+    legacyCareRecipients,
+    emptyCareRecipient
+  ]);
+
+  const currentPerson =
+    careRecipients.find(p => p.id === selectedView) ||
+    careRecipients[0] ||
+    emptyCareRecipient.current;
   const weeklyAdherence = currentPerson.adherence || 0;
+  const isPlaceholderView = selectedView === emptyCareRecipient.current.id;
+
+  if (isPlaceholderView) {
+    return (
+      <div className="h-full overflow-y-auto">
+        {/* Shared Header */}
+        <SharedHeader
+          selectedView={selectedView}
+          setSelectedView={setSelectedView}
+          careRecipients={careRecipients}
+          setCareRecipients={setCareRecipients}
+          showMe={false}
+          onNavigateToSettings={onNavigateToSettings}
+        />
+
+        <div className="p-4 space-y-4 -mt-2">
+          {user && recipientsError && (
+            <Card className="bg-rose-50 border border-rose-200 text-rose-600 shadow-none">
+              <p className="text-sm font-semibold">
+                돌봄 대상을 불러오지 못했습니다. (Failed to load care recipients.)
+              </p>
+              <p className="text-xs mt-1 text-rose-500">
+                잠시 후 다시 시도해 주세요. (Please try again in a moment.)
+              </p>
+            </Card>
+          )}
+
+          {user && recipientsLoading && !recipientsError && (
+            <Card className="bg-sky-50 border border-sky-100 text-sky-700 shadow-none">
+              <p className="text-sm font-semibold">
+                돌봄 대상 정보를 불러오는 중입니다. (Loading care recipients...)
+              </p>
+            </Card>
+          )}
+
+          <Card className="bg-sky-50 border border-sky-100 text-sky-700 shadow-none">
+            <p className="text-sm font-semibold">
+              연결된 돌봄 대상이 없습니다. (No care recipients yet.)
+            </p>
+            <p className="text-xs mt-1 text-sky-600">
+              상단의 초대 버튼으로 가족을 추가해 주세요. (Use the invite button above to add a family member.)
+            </p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   // Mock medicine schedule data
   const medicineSchedule = [
@@ -143,6 +269,25 @@ export function GuardianViewPage({ onNavigateToSettings }: GuardianViewPageProps
       />
 
       <div className="p-4 space-y-4 -mt-2">
+        {user && recipientsError && (
+          <Card className="bg-rose-50 border border-rose-200 text-rose-600 shadow-none">
+            <p className="text-sm font-semibold">
+              돌봄 대상을 불러오지 못했습니다. (Failed to load care recipients.)
+            </p>
+            <p className="text-xs mt-1 text-rose-500">
+              잠시 후 다시 시도해 주세요. (Please try again in a moment.)
+            </p>
+          </Card>
+        )}
+
+        {user && recipientsLoading && !recipientsError && (
+          <Card className="bg-sky-50 border border-sky-100 text-sky-700 shadow-none">
+            <p className="text-sm font-semibold">
+              돌봄 대상 정보를 불러오는 중입니다. (Loading care recipients...)
+            </p>
+          </Card>
+        )}
+
         {/* Quick Status Overview */}
         <div className="grid grid-cols-4 gap-3">
           <Card className="p-3 text-center border-0 shadow-sm bg-white">

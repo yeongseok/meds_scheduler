@@ -334,6 +334,23 @@ export const getSentInvitations = async (userId: string): Promise<Invitation[]> 
   }
 };
 
+export const getCareRecipientsForGuardian = async (guardianId: string): Promise<Guardian[]> => {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.GUARDIANS),
+      where('guardianId', '==', guardianId)
+    );
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Guardian[];
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to get care recipients');
+  }
+};
+
 export const respondToInvitation = async (
   invitationId: string,
   accept: boolean
@@ -412,6 +429,24 @@ export const listenToGuardians = (
     orderBy('createdAt', 'desc')
   );
   
+  return onSnapshot(q, (querySnapshot) => {
+    const guardians = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Guardian[];
+    callback(guardians);
+  });
+};
+
+export const listenToCareRecipients = (
+  guardianId: string,
+  callback: (guardians: Guardian[]) => void
+) => {
+  const q = query(
+    collection(db, COLLECTIONS.GUARDIANS),
+    where('guardianId', '==', guardianId)
+  );
+
   return onSnapshot(q, (querySnapshot) => {
     const guardians = querySnapshot.docs.map(doc => ({
       id: doc.id,

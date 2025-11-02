@@ -42,6 +42,7 @@ export {
   // Guardian functions
   addGuardian,
   getGuardians,
+  getCareRecipientsForGuardian,
   updateGuardian,
   deleteGuardian,
   
@@ -58,6 +59,7 @@ export {
   // Real-time listeners
   listenToUserMedicines,
   listenToGuardians,
+  listenToCareRecipients,
   
   // Batch operations
   batchDeleteMedicinesAndRecords

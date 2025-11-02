@@ -20,7 +20,7 @@
 
 ## Firestore Database
 - [ ] Validate Firestore security rules listed in `src/lib/README.md` inside the Firebase console or emulator.
-- [ ] Gradually migrate mock medicine, guardian, and dose data to Firestore reads/writes, guarding existing behavior with feature flags or fallbacks. *(HomePage now reads medicines from Firebase when available; GuardiansPage surfaces live guardians/invitations; dose flows still mock)*
+- [ ] Gradually migrate mock medicine, guardian, and dose data to Firestore reads/writes, guarding existing behavior with feature flags or fallbacks. *(HomePage now reads medicines from Firebase when available; GuardiansPage surfaces live guardians/invitations; GuardianViewPage lists Firestore care recipients with placeholder metrics; other pages still mock)*
 - [ ] Implement listener-based updates (`realtime: true`) only after verifying performance and accessibility implications.
 - [ ] Document any new collections or schema changes in `src/lib/types/index.ts` and update related hooks as needed.
 
@@ -30,7 +30,7 @@
 - [ ] Introduce unit or integration tests for hook logic where feasible, keeping test assets separate from production code.
 
 ## Guardians & Invitations
-- [ ] Wire guardian management flows to Firestore (`guardians`, `invitations` collections) using the provided service functions. *(Read-paths hooked up; mutation flows remain to be integrated)*
+- [ ] Wire guardian management flows to Firestore (`guardians`, `invitations` collections) using the provided service functions. *(GuardiansPage surfaces live guardians/invitations; GuardianViewPage now consumes the care recipient hook; mutation flows still rely on mock data)*
 - [ ] Maintain the current UI for pending/active invitations, only swapping data sources when parity with mock data is confirmed.
 - [ ] Confirm guardians can read relevant user data while respecting security rules (userId or guardianId ownership).
 

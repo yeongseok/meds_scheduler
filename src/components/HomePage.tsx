@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from './LanguageContext';
 import { SharedHeader, CareRecipient } from './SharedHeader';
 import { MedicineCard } from './MedicineCard';
-import { useAuth, useMedicines } from '../lib/hooks';
+import { useAuth, useMedicines, useCareRecipients } from '../lib/hooks';
 import type { Medicine as FirebaseMedicine } from '../lib/types';
 
 interface NewMedicine {
@@ -357,19 +357,17 @@ export function HomePage({
     loading: firebaseMedicinesLoading,
     error: firebaseMedicinesError
   } = useMedicines(user?.uid, false);
-  
-  // State
-  const [skippedMedicines, setSkippedMedicines] = useState<string[]>([]);
-  const [takenMedicines, setTakenMedicines] = useState<string[]>([]);
-  const [addedMedicines, setAddedMedicines] = useState<NewMedicine[]>([]);
-  const [untakenMedicines, setUntakenMedicines] = useState<string[]>([]);
-  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
+  const {
+    recipients: firebaseCareRecipients,
+    loading: careRecipientsLoading
+  } = useCareRecipients(user?.uid, false);
+  const mockCareRecipients = useMemo<CareRecipient[]>(() => [
     {
       id: 'person1',
-      name: 'Mom (Linda)',
+      name: language === 'ko' ? '엄마 (Linda)' : 'Mom (Linda)',
       initials: 'LM',
       color: 'bg-orange-300',
-      relation: 'Mother',
+      relation: language === 'ko' ? '어머니' : 'Mother',
       todayStatus: {
         total: 5,
         taken: 1,
@@ -381,10 +379,10 @@ export function HomePage({
     },
     {
       id: 'person2',
-      name: 'Dad (Robert)',
+      name: language === 'ko' ? '아빠 (Robert)' : 'Dad (Robert)',
       initials: 'RM',
       color: 'bg-amber-400',
-      relation: 'Father',
+      relation: language === 'ko' ? '아버지' : 'Father',
       todayStatus: {
         total: 4,
         taken: 3,
@@ -394,7 +392,43 @@ export function HomePage({
       },
       healthScore: 92
     }
-  ]);
+  ], [language]);
+  const remoteCareRecipients = useMemo<CareRecipient[]>(() =>
+    firebaseCareRecipients.map(rec => ({
+      id: rec.id,
+      name: rec.name,
+      initials: rec.initials,
+      color: rec.color,
+      relation: rec.relation,
+      todayStatus: undefined,
+      healthScore: undefined,
+      adherence: undefined
+    })), [firebaseCareRecipients]);
+  
+  // State
+  const [skippedMedicines, setSkippedMedicines] = useState<string[]>([]);
+  const [takenMedicines, setTakenMedicines] = useState<string[]>([]);
+  const [addedMedicines, setAddedMedicines] = useState<NewMedicine[]>([]);
+  const [untakenMedicines, setUntakenMedicines] = useState<string[]>([]);
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>(mockCareRecipients);
+  useEffect(() => {
+    if (!user?.uid) {
+      setCareRecipients(mockCareRecipients);
+      return;
+    }
+
+    if (careRecipientsLoading) {
+      setCareRecipients([]);
+      return;
+    }
+
+    setCareRecipients(remoteCareRecipients);
+  }, [user?.uid, careRecipientsLoading, remoteCareRecipients, mockCareRecipients]);
+  useEffect(() => {
+    if (selectedView !== 'my-meds' && careRecipients.length === 0) {
+      setSelectedView('my-meds');
+    }
+  }, [careRecipients.length, selectedView, setSelectedView]);
 
   useEffect(() => {
     if (firebaseMedicinesError) {
@@ -433,9 +467,16 @@ export function HomePage({
 
   // Memoized computed values
   const currentPerson = useMemo(
-    () => careRecipients.find(p => p.id === selectedView),
+    () => careRecipients.find(p => p.id === selectedView) ?? careRecipients[0],
     [careRecipients, selectedView]
   );
+  const currentPersonLabel = useMemo(() => {
+    if (!currentPerson?.name) {
+      return language === 'ko' ? '돌봄 대상자' : 'Care Recipient';
+    }
+    const [first] = currentPerson.name.split(/\s+/);
+    return first || currentPerson.name;
+  }, [currentPerson, language]);
 
   const baseMedicines = useMemo(
     () => selectedView === 'my-meds' 
@@ -490,11 +531,11 @@ export function HomePage({
   const handleSendReminder = useCallback(() => {
     toast.success(language === 'ko' ? '알림이 전송되었습니다!' : 'Reminder sent!', {
       description: language === 'ko' 
-        ? `${currentPerson?.name.split(' ')[0]}님에게 약 복용 알림을 보냈습니다.`
-        : `Medication reminder sent to ${currentPerson?.name.split(' ')[0]}.`,
+        ? `${currentPersonLabel}님에게 약 복용 알림을 보냈습니다.`
+        : `Medication reminder sent to ${currentPersonLabel}.`,
       duration: 3000,
     });
-  }, [language, currentPerson]);
+  }, [language, currentPersonLabel]);
 
   // Handle new medicine from add page
   useEffect(() => {
@@ -528,8 +569,8 @@ export function HomePage({
                 <h3 className="font-semibold text-orange-900 mb-1 text-lg text-[18px]">{t('home.attentionNeeded')}</h3>
                 <p className="text-base text-orange-800 text-[16px]">
                   {language === 'ko' 
-                    ? `${currentPerson?.name.split(' ')[0]}님은 ${currentPerson?.todayStatus.overdue}개의 약을 복용하지 않았습니다. 확인해 주세요.`
-                    : `${currentPerson?.name.split(' ')[0]} ${t('home.overdueMessage').replace('{count}', String(currentPerson?.todayStatus.overdue || 0))}`}
+                    ? `${currentPersonLabel}님은 ${currentPerson?.todayStatus.overdue ?? 0}개의 약을 복용하지 않았습니다. 확인해 주세요.`
+                    : `${currentPersonLabel} ${t('home.overdueMessage').replace('{count}', String(currentPerson?.todayStatus.overdue || 0))}`}
                 </p>
                 <Button className="mt-3 bg-orange-600 hover:bg-orange-700 text-white h-10 text-base" onClick={handleSendReminder}>
                   {t('home.sendReminder')}
@@ -548,8 +589,8 @@ export function HomePage({
                 {selectedView === 'my-meds' 
                   ? t('home.todaySchedule')
                   : language === 'ko' 
-                    ? `${currentPerson?.name.split(' ')[0]}의 일정`
-                    : `${currentPerson?.name.split(' ')[0]}'s Schedule`}
+                    ? `${currentPersonLabel}의 일정`
+                    : `${currentPersonLabel}'s Schedule`}
               </span>
             </h2>
           </div>
