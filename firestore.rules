@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profiles
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // Medicines
+    match /medicines/{medicineId} {
+      allow read, write: if isSignedIn() && (
+        (exists(resource) && resource.data.userId == request.auth.uid) ||
+        (!exists(resource) && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Dose Records
+    match /doseRecords/{recordId} {
+      allow read, write: if isSignedIn() && (
+        (exists(resource) && resource.data.userId == request.auth.uid) ||
+        (!exists(resource) && request.resource.data.userId == request.auth.uid)
+      );
+    }
+
+    // Guardians (bidirectional relationships)
+    match /guardians/{docId} {
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.guardianId == request.auth.uid
+      );
+
+      allow create: if isSignedIn() &&
+        request.resource.data.userId == request.auth.uid;
+
+      allow update, delete: if isSignedIn() &&
+        ((exists(resource) && resource.data.userId == request.auth.uid) ||
+         (!exists(resource) && request.resource.data.userId == request.auth.uid));
+    }
+
+    // Invitations
+    match /invitations/{invitationId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.fromUserId == request.auth.uid;
+      allow update, delete: if isSignedIn() && (
+        (exists(resource) && resource.data.fromUserId == request.auth.uid) ||
+        (!exists(resource) && request.resource.data.fromUserId == request.auth.uid)
+      );
+    }
+
+    // Settings
+    match /settings/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // Medicine Permission Requests
+    match /medicinePermissionRequests/{requestId} {
+      // Care recipients can read their requests
+      allow read: if isSignedIn() && (
+        resource.data.careRecipientId == request.auth.uid ||
+        resource.data.guardianId == request.auth.uid
+      );
+
+      // Guardians create pending requests for their recipients
+      allow create: if isSignedIn() &&
+        request.resource.data.guardianId == request.auth.uid &&
+        request.resource.data.status == 'pending';
+
+      // Care recipients approve/deny while pending
+      allow update: if isSignedIn() &&
+        resource.data.careRecipientId == request.auth.uid &&
+        resource.data.status == 'pending';
+
+      // Either party can delete their own request
+      allow delete: if isSignedIn() &&
+        (resource.data.guardianId == request.auth.uid ||
+         resource.data.careRecipientId == request.auth.uid);
+    }
+  }
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+}
