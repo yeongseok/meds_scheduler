@@ -7,7 +7,7 @@
 - [ ] Verify Firebase project config in `/lib/firebase/config.ts` matches the environment being targeted; never hardcode secrets in repo.
 - [x] Confirm Firestore security rules include sections for `users`, `medicines`, `doseRecords`, `guardians`, `invitations`, `settings`, and `medicinePermissionRequests` exactly as documented in `/lib/README.md` and `/PERMISSION-SYSTEM-PRODUCTION-READY.md`.
 - [x] Deploy Firebase Storage rules covering both `/profile-photos/{userId}/` and `/medicine-photos/{userId}/` buckets (5 MB size cap, `image/*` MIME check).
-- [ ] Create the four composite indexes listed in `/lib/PERMISSION-QUICK-REFERENCE.md` for the permission request queries.
+- [ ] Create the four composite indexes listed in `/lib/PERMISSION-QUICK-REFERENCE.md` (see `firebase-indexes.md` for exact console steps) for the permission request queries.
 
 ## Authentication & Profile Security
 - [ ] Ensure all profile editing flows use `reauthenticateUser()` (see `/lib/RECENT-UPDATES-SUMMARY.md` & `/PROFILE-AUTH-TEST.md`) before calling update functions.
