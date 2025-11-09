@@ -1,0 +1,306 @@
+import React, { useState } from 'react';
+import { Users, ChevronDown, Activity, CheckCircle, AlertCircle, XCircle, Heart, TrendingUp, Calendar } from 'lucide-react';
+import { Card } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Progress } from './ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Label } from './ui/label';
+import { SharedHeader, CareRecipient } from './SharedHeader';
+
+interface GuardianViewPageProps {
+  onNavigateToSettings?: () => void;
+}
+
+export function GuardianViewPage({ onNavigateToSettings }: GuardianViewPageProps) {
+  const [selectedView, setSelectedView] = useState('person1');
+
+  // Mock data for people being cared for
+  const [careRecipients, setCareRecipients] = useState<CareRecipient[]>([
+    {
+      id: 'person1',
+      name: '엄마 (Linda)',
+      initials: 'LM',
+      color: 'bg-brand-primary',
+      relation: '어머니',
+      todayStatus: {
+        total: 5,
+        taken: 1,
+        overdue: 1,
+        pending: 1,
+        upcoming: 2
+      },
+      healthScore: 75,
+      adherence: 88
+    },
+    {
+      id: 'person2',
+      name: '아빠 (Robert)',
+      initials: 'RM',
+      color: 'bg-brand-accent',
+      relation: '아버지',
+      todayStatus: {
+        total: 4,
+        taken: 3,
+        overdue: 0,
+        pending: 0,
+        upcoming: 1
+      },
+      healthScore: 92,
+      adherence: 96
+    }
+  ]);
+
+  const currentPerson = careRecipients.find(p => p.id === selectedView) || careRecipients[0];
+  const weeklyAdherence = currentPerson.adherence || 0;
+
+  // Mock medicine schedule data
+  const medicineSchedule = [
+    {
+      id: '1',
+      name: '비타민 D',
+      dosage: '1000 IU',
+      time: '오전 08:00',
+      status: 'taken',
+      takenAt: '오전 08:15',
+      color: 'bg-green-100'
+    },
+    {
+      id: '2',
+      name: '아스피린',
+      dosage: '75mg',
+      time: '오전 09:00',
+      status: 'overdue',
+      overdueBy: '3시간',
+      color: 'bg-red-100'
+    },
+    {
+      id: '3',
+      name: '혈압약',
+      dosage: '10mg',
+      time: '오후 12:00',
+      status: 'pending',
+      color: 'bg-brand-primary'
+    },
+    {
+      id: '4',
+      name: '칼슘',
+      dosage: '500mg',
+      time: '오후 06:00',
+      status: 'upcoming',
+      color: 'bg-brand-accent'
+    },
+    {
+      id: '5',
+      name: '수면제',
+      dosage: '5mg',
+      time: '오후 10:00',
+      status: 'upcoming',
+      color: 'bg-brand-secondary'
+    }
+  ];
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'taken':
+        return <CheckCircle className="text-green-600" size={18} />;
+      case 'overdue':
+        return <XCircle className="text-red-600" size={18} />;
+      case 'pending':
+        return <AlertCircle className="text-orange-600 animate-pulse" size={18} />;
+      default:
+        return <Activity className="text-brand-accent" size={18} />;
+    }
+  };
+
+  const getStatusBadge = (medicine: any) => {
+    switch (medicine.status) {
+      case 'taken':
+        return <Badge className="bg-green-100 text-green-700 border-green-200 text-xs">✓ {medicine.takenAt} 복용</Badge>;
+      case 'overdue':
+        return <Badge className="bg-red-100 text-red-700 border-red-300 text-xs animate-pulse">⚠️ 기한 초과 ({medicine.overdueBy})</Badge>;
+      case 'pending':
+        return <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs">⏰ 지금 복용</Badge>;
+      case 'upcoming':
+        return <Badge variant="outline" className="text-gray-600 border-gray-300 text-xs">예정</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="h-full overflow-y-auto">
+      {/* Shared Header */}
+      <SharedHeader
+        selectedView={selectedView}
+        setSelectedView={setSelectedView}
+        careRecipients={careRecipients}
+        setCareRecipients={setCareRecipients}
+        showMe={false}
+        onNavigateToSettings={onNavigateToSettings}
+      />
+
+      <div className="p-4 space-y-4 -mt-2">
+        {/* Quick Status Overview */}
+        <div className="grid grid-cols-4 gap-3">
+          <Card className="p-3 text-center border-0 shadow-sm bg-white">
+            <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <CheckCircle className="text-white" size={18} />
+            </div>
+            <p className="font-bold text-gray-800">{currentPerson.todayStatus.taken}</p>
+            <p className="text-xs text-gray-600">복용</p>
+          </Card>
+          
+          <Card className="p-3 text-center border-0 shadow-sm bg-white">
+            <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center mx-auto mb-2 animate-pulse">
+              <XCircle className="text-white" size={18} />
+            </div>
+            <p className="font-bold text-gray-800">{currentPerson.todayStatus.overdue}</p>
+            <p className="text-xs text-gray-600">기한 초과</p>
+          </Card>
+          
+          <Card className="p-3 text-center border-0 shadow-sm bg-white">
+            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-2">
+              <AlertCircle className="text-white" size={18} />
+            </div>
+            <p className="font-bold text-gray-800">{currentPerson.todayStatus.pending}</p>
+            <p className="text-xs text-gray-600">지금</p>
+          </Card>
+          
+          <Card className="p-3 text-center border-0 shadow-sm bg-white">
+            <div className="w-10 h-10 bg-brand-accent rounded-xl flex items-center justify-center mx-auto mb-2">
+              <Activity className="text-white" size={18} />
+            </div>
+            <p className="font-bold text-gray-800">{currentPerson.todayStatus.upcoming}</p>
+            <p className="text-xs text-gray-600">나중에</p>
+          </Card>
+        </div>
+
+        {/* Health Score Card */}
+        <Card className="p-4 bg-white border-0 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-800 flex items-center space-x-2">
+              <Heart className="text-brand-accent" size={20} />
+              <span>오늘의 건강 점수</span>
+            </h3>
+            <span className="text-2xl font-bold text-gray-800">{currentPerson.healthScore}%</span>
+          </div>
+          <Progress value={currentPerson.healthScore} className="h-3 mb-2" />
+          <p className="text-xs text-gray-600">
+            {currentPerson.healthScore >= 80 ? '🎉 훌륭한 순응도입니다!' : currentPerson.healthScore >= 60 ? '👍 좋은 진전입니다' : '⚠️ 주의가 필요합니다'}
+          </p>
+        </Card>
+
+        {/* Today's Schedule */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-gray-800 flex items-center space-x-2">
+              <Calendar className="text-brand-accent" size={20} />
+              <span>오늘의 일정</span>
+            </h2>
+            <span className="text-sm text-gray-500">
+              {currentPerson.todayStatus.total}개 중 {currentPerson.todayStatus.taken}개 복용
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {medicineSchedule.map((medicine) => (
+              <Card 
+                key={medicine.id} 
+                className={`p-4 border-0 shadow-sm ${
+                  medicine.status === 'overdue' ? 'bg-red-50 border-2 border-red-200' : 'bg-white'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3 flex-1">
+                    <div className={`w-12 h-12 ${medicine.color} rounded-xl flex items-center justify-center relative`}>
+                      <div className="w-6 h-6 bg-white rounded-lg flex items-center justify-center">
+                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                      </div>
+                      <div className="absolute -top-1 -right-1">
+                        {getStatusIcon(medicine.status)}
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h3 className={`font-semibold ${medicine.status === 'overdue' ? 'text-red-800' : 'text-gray-800'}`}>
+                        {medicine.name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{medicine.dosage} • {medicine.time}</p>
+                      <div className="mt-1">
+                        {getStatusBadge(medicine)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Weekly Adherence */}
+        <Card className="p-4 bg-white border-0 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-800 flex items-center space-x-2">
+              <TrendingUp className="text-brand-accent" size={20} />
+              <span>이번 주</span>
+            </h3>
+            <span className="text-sm font-medium text-gray-600">{weeklyAdherence}% 순응도</span>
+          </div>
+          
+          <Progress value={weeklyAdherence} className="h-3 mb-3" />
+          
+          <div className="flex justify-between text-xs text-gray-500 mb-4">
+            <span>월</span>
+            <span>화</span>
+            <span>수</span>
+            <span>목</span>
+            <span>금</span>
+            <span>토</span>
+            <span>일</span>
+          </div>
+
+          <div className="flex justify-around pt-3 border-t">
+            <div className="text-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mx-auto mb-1"></div>
+              <p className="text-xs text-gray-600">24개 복용</p>
+            </div>
+            <div className="text-center">
+              <div className="w-3 h-3 bg-red-500 rounded-full mx-auto mb-1"></div>
+              <p className="text-xs text-gray-600">3개 누락</p>
+            </div>
+            <div className="text-center">
+              <div className="w-3 h-3 bg-brand-accent rounded-full mx-auto mb-1"></div>
+              <p className="text-xs text-gray-600">4개 예정</p>
+            </div>
+          </div>
+        </Card>
+
+        {/* Alert for Overdue */}
+        {currentPerson.todayStatus.overdue > 0 && (
+          <Card className="p-4 bg-red-50 border-red-200 border-2">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 bg-red-200 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="text-red-700" size={20} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-900 mb-1">주의 필요</h3>
+                <p className="text-sm text-red-800">
+                  {currentPerson.name.split(' ')[0]}님이 {currentPerson.todayStatus.overdue}개의 약을 기한 내에 복용하지 않았습니다. 
+                  확인해 주세요.
+                </p>
+                <Button size="sm" className="mt-3 bg-red-600 hover:bg-red-700 text-white h-8">
+                  리마인더 보내기
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        <div className="h-6"></div>
+      </div>
+    </div>
+  );
+}
