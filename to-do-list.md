@@ -4,7 +4,7 @@
 - Re-read `PROJECT-README.md`, `README.md`, `/guidelines/AI-AGENT-RULES.md`, `/lib/README.md`, `/lib/INDEX.md`, `/lib/AUTHENTICATION-GUIDE.md`, `/lib/HOOKS-REFERENCE.md`, `/lib/DATA-MODELS.md`, `/lib/MIGRATION-GUIDE.md` before touching any Firebase-linked code to stay aligned with the documented patterns and protected-component rules.
 
 ## Firebase & Firestore Infrastructure
-- [ ] Verify Firebase project config in `/lib/firebase/config.ts` matches the environment being targeted; never hardcode secrets in repo.
+- [ ] Verify Firebase project config in `/lib/firebase/config.ts` matches the environment being targeted; follow `firebase-config-checklist.md` to keep secrets out of source control.
 - [x] Confirm Firestore security rules include sections for `users`, `medicines`, `doseRecords`, `guardians`, `invitations`, `settings`, and `medicinePermissionRequests` exactly as documented in `/lib/README.md` and `/PERMISSION-SYSTEM-PRODUCTION-READY.md`.
 - [x] Deploy Firebase Storage rules covering both `/profile-photos/{userId}/` and `/medicine-photos/{userId}/` buckets (5 MB size cap, `image/*` MIME check).
 - [ ] Create the four composite indexes listed in `/lib/PERMISSION-QUICK-REFERENCE.md` (see `firebase-indexes.md` for exact console steps) for the permission request queries.
